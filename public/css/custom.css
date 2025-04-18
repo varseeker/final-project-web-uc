@@ -1,0 +1,54 @@
+.parent-click {
+    position: relative;
+  }
+
+  
+.child-click::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+.tr-done{
+  background-color: red;
+  color: #f2f2f2;
+}
+
+.header-big{
+  font-size: 1.8rem;
+}
+
+.big-title{
+  font-size: 4rem;
+}
+
+.font-normal{
+  font-size: 1.1rem;
+  font-weight: 100;
+}
+
+.font-read{
+  font-size: 1.2rem;
+}
+
+.fn-center{
+  text-align: center;
+}
+
+.hide{
+  display: none;
+}
+
+.edit-col{
+  min-width: 100%; 
+  border: none;
+  background-color: transparent;
+}
+
+.hide-this{
+  display: none;
+}
