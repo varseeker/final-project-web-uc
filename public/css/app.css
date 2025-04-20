@@ -44,7 +44,6 @@ a:hover {
     color: #fff;
 }
 
-
 .hero-section {
     background-size: cover;
     background-position: center;
@@ -72,7 +71,8 @@ a:hover {
     cursor: pointer;
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-primary:active {
     background-color: var(--primary-hover-color);
 }
 
@@ -84,7 +84,9 @@ a:hover {
     cursor: pointer;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover, 
+.btn-secondary:active, 
+.btn-secondary:focus  {
     background-color: var(--secondary-hover-color);
 }
 

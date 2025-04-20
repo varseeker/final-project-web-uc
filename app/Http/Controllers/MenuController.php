@@ -49,12 +49,49 @@ class MenuController extends Controller
     {
         $menuItems = [
             [
+                'id' => 1,
                 'name' => 'Caffee Latte',
                 'category' => 'Coffee',
                 'price' => 22000,
                 'image' => 'https://media-hosting.imagekit.io/01863d534f344bd6/screenshot_1744966960557.png?Expires=1839574963&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=RBMM10C6pDbqF9jwjrzMhQwEt1GyA3XBj-3On~WCTaLqE9ad~HIuaNXzvBwa4oNQrVuf0RfTOT3bjz1fAD4xP-du3gcHCiK3eVEFBHLhtAUuFExSiIctlmkIV4c0qfuEHxlGbdN7MgjqYAxQe0R~36qfjXQfli9lzPlzA8-iMSi1E0LI0TVwq3bzwmd99iPc794IIylmhJjOC8tAS3EOByFMVpvKLJfe97nyltj0Uqj5FxA8y3~GiTc67XgqIoy1Z3NuIu6T52yTssmx~bvSVKCkIW-yEd07lfMGUUhJC55B305lKcuU0ZX3pKQfzJYXDBna-XizrL~PRrjpava0Rw__'
             ],
             [
+                'id' => 2,
+                'name' => 'Espresso',
+                'category' => 'Coffee',
+                'price' => 22000,
+                'image' => 'https://media-hosting.imagekit.io/01863d534f344bd6/screenshot_1744966960557.png?Expires=1839574963&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=RBMM10C6pDbqF9jwjrzMhQwEt1GyA3XBj-3On~WCTaLqE9ad~HIuaNXzvBwa4oNQrVuf0RfTOT3bjz1fAD4xP-du3gcHCiK3eVEFBHLhtAUuFExSiIctlmkIV4c0qfuEHxlGbdN7MgjqYAxQe0R~36qfjXQfli9lzPlzA8-iMSi1E0LI0TVwq3bzwmd99iPc794IIylmhJjOC8tAS3EOByFMVpvKLJfe97nyltj0Uqj5FxA8y3~GiTc67XgqIoy1Z3NuIu6T52yTssmx~bvSVKCkIW-yEd07lfMGUUhJC55B305lKcuU0ZX3pKQfzJYXDBna-XizrL~PRrjpava0Rw__'
+            ],
+            [
+                'id' => 3,
+                'name' => 'Moccachino',
+                'category' => 'Coffee',
+                'price' => 22000,
+                'image' => 'https://media-hosting.imagekit.io/01863d534f344bd6/screenshot_1744966960557.png?Expires=1839574963&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=RBMM10C6pDbqF9jwjrzMhQwEt1GyA3XBj-3On~WCTaLqE9ad~HIuaNXzvBwa4oNQrVuf0RfTOT3bjz1fAD4xP-du3gcHCiK3eVEFBHLhtAUuFExSiIctlmkIV4c0qfuEHxlGbdN7MgjqYAxQe0R~36qfjXQfli9lzPlzA8-iMSi1E0LI0TVwq3bzwmd99iPc794IIylmhJjOC8tAS3EOByFMVpvKLJfe97nyltj0Uqj5FxA8y3~GiTc67XgqIoy1Z3NuIu6T52yTssmx~bvSVKCkIW-yEd07lfMGUUhJC55B305lKcuU0ZX3pKQfzJYXDBna-XizrL~PRrjpava0Rw__'
+            ],
+            [
+                'id' => 4,
+                'name' => 'Caffee Latte',
+                'category' => 'Coffee',
+                'price' => 22000,
+                'image' => 'https://media-hosting.imagekit.io/01863d534f344bd6/screenshot_1744966960557.png?Expires=1839574963&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=RBMM10C6pDbqF9jwjrzMhQwEt1GyA3XBj-3On~WCTaLqE9ad~HIuaNXzvBwa4oNQrVuf0RfTOT3bjz1fAD4xP-du3gcHCiK3eVEFBHLhtAUuFExSiIctlmkIV4c0qfuEHxlGbdN7MgjqYAxQe0R~36qfjXQfli9lzPlzA8-iMSi1E0LI0TVwq3bzwmd99iPc794IIylmhJjOC8tAS3EOByFMVpvKLJfe97nyltj0Uqj5FxA8y3~GiTc67XgqIoy1Z3NuIu6T52yTssmx~bvSVKCkIW-yEd07lfMGUUhJC55B305lKcuU0ZX3pKQfzJYXDBna-XizrL~PRrjpava0Rw__'
+            ],
+            [
+                'id' => 5,
+                'name' => 'Caffee Latte',
+                'category' => 'Coffee',
+                'price' => 22000,
+                'image' => 'https://media-hosting.imagekit.io/01863d534f344bd6/screenshot_1744966960557.png?Expires=1839574963&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=RBMM10C6pDbqF9jwjrzMhQwEt1GyA3XBj-3On~WCTaLqE9ad~HIuaNXzvBwa4oNQrVuf0RfTOT3bjz1fAD4xP-du3gcHCiK3eVEFBHLhtAUuFExSiIctlmkIV4c0qfuEHxlGbdN7MgjqYAxQe0R~36qfjXQfli9lzPlzA8-iMSi1E0LI0TVwq3bzwmd99iPc794IIylmhJjOC8tAS3EOByFMVpvKLJfe97nyltj0Uqj5FxA8y3~GiTc67XgqIoy1Z3NuIu6T52yTssmx~bvSVKCkIW-yEd07lfMGUUhJC55B305lKcuU0ZX3pKQfzJYXDBna-XizrL~PRrjpava0Rw__'
+            ],
+            [
+                'id' => 6,
+                'name' => 'Caffee Latte',
+                'category' => 'Coffee',
+                'price' => 22000,
+                'image' => 'https://media-hosting.imagekit.io/01863d534f344bd6/screenshot_1744966960557.png?Expires=1839574963&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=RBMM10C6pDbqF9jwjrzMhQwEt1GyA3XBj-3On~WCTaLqE9ad~HIuaNXzvBwa4oNQrVuf0RfTOT3bjz1fAD4xP-du3gcHCiK3eVEFBHLhtAUuFExSiIctlmkIV4c0qfuEHxlGbdN7MgjqYAxQe0R~36qfjXQfli9lzPlzA8-iMSi1E0LI0TVwq3bzwmd99iPc794IIylmhJjOC8tAS3EOByFMVpvKLJfe97nyltj0Uqj5FxA8y3~GiTc67XgqIoy1Z3NuIu6T52yTssmx~bvSVKCkIW-yEd07lfMGUUhJC55B305lKcuU0ZX3pKQfzJYXDBna-XizrL~PRrjpava0Rw__'
+            ],
+            [
+                'id' => 11,
                 'name' => 'Friench Fries',
                 'category' => 'Snack',
                 'price' => 22000,
@@ -63,7 +100,7 @@ class MenuController extends Controller
         ];
 
         // Duplicate for layout preview
-        $menuItems = array_merge($menuItems, $menuItems, $menuItems,$menuItems, $menuItems);
+        // $menuItems = array_merge($menuItems);
 
         $groupedItems = collect($menuItems)->groupBy('category');
 
