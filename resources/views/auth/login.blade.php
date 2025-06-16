@@ -6,10 +6,14 @@
         <div class="col-md-12">
             <div class="card mx-auto mt-3" style="max-width: 800px;">
                 <div class="row g-0">
-                  <div class="col-md-7">
-                    <div class="card-body">
+                    
+                  <div class="col-md-6">
+                    <img src="{{asset('img/side-img.png')}}" class="img-fluid rounded-start rounded-start-login-image" alt="...">
+                  </div>
+                  <div class="col-md-6 flex row align-items-center">
+                    <div class="card-body col ">
                     <div class="fs-4 text-md-center">{{ __('Welcome back!') }}</div>
-                        <div class=" px-3 mt-2">
+                        <div class="px-3 mt-2">
                             <div class="card-body"  data-bs-theme="light">
                                 <form method="POST" action="{{ route('login') }}">
                                     @csrf
@@ -62,9 +66,6 @@
                             </div>
                         </div>
                     </div>
-                  </div>
-                  <div class="col-md-5">
-                    <img src="{{asset('img/side-img.png')}}" class="img-fluid rounded-start rounded-start-login-image" alt="...">
                   </div>
                 </div>
             </div>

@@ -7,7 +7,7 @@
 
 /* Base Styles */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f8f9fa;
     color: #333;
 }
@@ -23,8 +23,8 @@ a:hover {
 
 /* Custom Blue Theme */
 :root {
-    --primary-color: #503B31;
-    --secondary-color: #705D56;
+    --primary-color: #503b31;
+    --secondary-color: #705d56;
     --primary-hover-color: #8b7168;
     --secondary-hover-color: #aa8a7e;
 }
@@ -43,6 +43,18 @@ a:hover {
     background-color: var(--primary-color);
     color: #fff;
 }
+
+.btn-success {
+    background-color: #503b31 !important;
+}
+/* .btn-outline-success {
+    background-color: #503b31 !important;
+    font: #fff;
+}
+.bs-outline-success {
+    background-color: #503b31 !important;
+    font: #fff;
+} */
 
 .hero-section {
     background-size: cover;
@@ -84,9 +96,9 @@ a:hover {
     cursor: pointer;
 }
 
-.btn-secondary:hover, 
-.btn-secondary:active, 
-.btn-secondary:focus  {
+.btn-secondary:hover,
+.btn-secondary:active,
+.btn-secondary:focus {
     background-color: var(--secondary-hover-color);
 }
 
@@ -156,7 +168,7 @@ a:hover {
 }
 
 footer {
-    background-color: #4E3A32;
+    background-color: #4e3a32;
     color: white;
 }
 
