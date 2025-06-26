@@ -1,9 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Maatwebsite\Excel\Facades\Excel;
-// use App\Http\Middleware\IsAdmin;
-use App\Http\Controllers\LoginController;
 
 // Route::get('/', function () {
 //     return view('welcome');

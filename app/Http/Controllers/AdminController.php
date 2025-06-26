@@ -212,7 +212,7 @@ class AdminController extends Controller
                         'role' => $request->role,
                         'phone' => $request->phone,
                         'address' => $request->address,
-                        'password' => $password = Hash::make('new'.$request->phone)
+                        'password' => $password = Hash::make($request->name.'123')
                     ]);
                     return redirect()->route('crewData');
 
