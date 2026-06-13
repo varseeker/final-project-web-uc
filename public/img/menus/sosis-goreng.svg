@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Sosis Goreng">
+  <rect width="160" height="160" rx="18" fill="#fff5f5"/>
+  <rect x="38" y="72" width="56" height="18" rx="9" fill="#e53935"/>
+  <rect x="66" y="88" width="56" height="18" rx="9" fill="#c62828"/>
+  <circle cx="52" cy="81" r="3" fill="#ffcdd2"/>
+  <circle cx="80" cy="97" r="3" fill="#ffcdd2"/>
+  <ellipse cx="80" cy="118" rx="42" ry="8" fill="#ffccbc"/>
+</svg>

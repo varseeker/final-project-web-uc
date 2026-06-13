@@ -1,33 +1,39 @@
+# Render Blueprint — POS Warkop Kayu
+# Deploy inventory terlebih dahulu, lalu set INVENTORY_SERVICE_URL ke URL inventory.
+
 databases:
-  - name: underground-cafe-db
+  - name: pos-warkop-kayu-db
     plan: free
-    databaseName: underground_cafe
-    user: underground_cafe
+    databaseName: pos_warkop_kayu
+    user: pos_warkop_kayu
 
 services:
   - type: web
-    name: underground-cafe
+    name: pos-warkop-kayu
     runtime: docker
     plan: free
+    region: singapore
     healthCheckPath: /up
-    preDeployCommand: php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache
+    autoDeployTrigger: commit
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: underground-cafe-db
+          name: pos-warkop-kayu-db
           property: connectionString
       - key: DB_URL
         fromDatabase:
-          name: underground-cafe-db
+          name: pos-warkop-kayu-db
           property: connectionString
       - key: DB_CONNECTION
         value: pgsql
+      - key: DB_SSLMODE
+        value: require
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: "false"
       - key: APP_NAME
-        value: Underground Cafe
+        value: Warkop Kayu POS
       - key: LOG_CHANNEL
         value: stderr
       - key: LOG_LEVEL
@@ -40,11 +46,25 @@ services:
         value: database
       - key: QUEUE_CONNECTION
         value: database
-      - key: MIDTRANS_SERVER_KEY
-        value: SB-Mid-server-t8MFom-L-ZMiJYA0lPvUX8hc
-      - key: MIDTRANS_CLIENT_KEY
-        value: SB-Mid-client-07PMj5xBlweORohB
+      - key: INVENTORY_SERVICE_ENABLED
+        value: "true"
+      - key: INVENTORY_SYNC_TTL
+        value: "120"
+      - key: INVENTORY_DEFAULT_PRICE
+        value: "18000"
+      - key: INVENTORY_ORDER_SOURCE
+        value: pos-warkop-kayu
+      - key: INVENTORY_ORDER_ID_PREFIX
+        value: pos-warkop-kayu
+      - key: INVENTORY_SERVICE_URL
+        sync: false
+      - key: INVENTORY_API_TOKEN
+        sync: false
       - key: APP_KEY
         sync: false
       - key: APP_URL
+        sync: false
+      - key: MIDTRANS_SERVER_KEY
+        sync: false
+      - key: MIDTRANS_CLIENT_KEY
         sync: false

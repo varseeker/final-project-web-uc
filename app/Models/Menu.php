@@ -15,6 +15,10 @@ class Menu extends Model
         'most_ordered',
         'img_url',
         'options',
+        'inventory_menu_id',
+        'inventory_menu_code',
+        'is_active',
+        'inventory_synced_at',
         'subtotal',
     ];
 
@@ -22,6 +26,7 @@ class Menu extends Model
     {
         return [
             'most_ordered' => 'boolean',
+            'is_active' => 'boolean',
             'options' => 'array',
         ];
     }

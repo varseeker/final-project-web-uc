@@ -48,6 +48,38 @@
         });
     }
 
+    function initMenuSegmentFilter() {
+        var nav = document.querySelector('.pos-segment-nav');
+        if (!nav) return;
+
+        var buttons = nav.querySelectorAll('[data-menu-filter]');
+        var sections = document.querySelectorAll('[data-menu-segment]');
+
+        function applyFilter(key) {
+            buttons.forEach(function (btn) {
+                var active = btn.dataset.menuFilter === key;
+                btn.classList.toggle('is-active', active);
+                btn.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+
+            sections.forEach(function (section) {
+                var show = key === 'all' || section.dataset.menuSegment === key;
+                section.classList.toggle('is-filter-hidden', !show);
+            });
+
+            document.querySelectorAll('.welcome-menu-col[data-menu-segment]').forEach(function (col) {
+                var show = key === 'all' || col.dataset.menuSegment === key;
+                col.classList.toggle('is-filter-hidden', !show);
+            });
+        }
+
+        buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                applyFilter(btn.dataset.menuFilter || 'all');
+            });
+        });
+    }
+
     function initMenuCards() {
         document.querySelectorAll('.pos-menu-card[data-bs-toggle="modal"]').forEach(function (trigger) {
             trigger.addEventListener('keydown', function (e) {
@@ -80,6 +112,32 @@
                     bootstrap.Modal.getOrCreateInstance(orderEl).show();
                 });
             });
+        });
+    }
+
+    function initMenuDisplayImages() {
+        document.querySelectorAll('.menu-display-img').forEach(function (img) {
+            function markLoaded() {
+                img.classList.add('is-loaded');
+            }
+
+            function markError() {
+                var fallback = img.getAttribute('data-fallback');
+                if (fallback && img.src !== fallback) {
+                    img.src = fallback;
+                    return;
+                }
+                img.classList.add('is-error');
+                img.classList.add('is-loaded');
+            }
+
+            if (img.complete && img.naturalWidth > 0) {
+                markLoaded();
+                return;
+            }
+
+            img.addEventListener('load', markLoaded, { once: true });
+            img.addEventListener('error', markError, { once: true });
         });
     }
 
@@ -118,6 +176,8 @@
         initFormLoading();
         initCustomerNameValidation();
         initMenuCards();
+        initMenuDisplayImages();
+        initMenuSegmentFilter();
         initNavbarCollapse();
     });
 })();

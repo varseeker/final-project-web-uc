@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Inventory\InventoryOrderPushService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -18,8 +19,9 @@ class HomeController extends Controller
      *
      * @return void
      */
-    public function __construct()
-    {
+    public function __construct(
+        private InventoryOrderPushService $inventoryOrderPush,
+    ) {
         $this->middleware('auth');
         Config::$serverKey = config('midtrans.server_key');
         Config::$isProduction = config('midtrans.is_production');
@@ -59,7 +61,7 @@ class HomeController extends Controller
             'amountChange' => $change,
             'payment-status' => 'success',
             'payReference' => $cashReference,
-        ]);
+        ], 'Cash');
         $this->recordPayment($orderId, $pay, 'Cash', $cashReference);
 
         return $this->receiptView(
@@ -207,7 +209,7 @@ class HomeController extends Controller
                 'amountChange' => $change,
                 'payment-status' => 'success',
                 'payReference' => $payReference,
-            ]);
+            ], 'QRIS');
             $this->recordPayment($orderId, $total, 'QRIS', $payReference);
             $pay = $total;
         }
@@ -279,7 +281,7 @@ class HomeController extends Controller
         DB::table('carts')->where('id', $basketOwner->id)->delete();
     }
 
-    private function finalizeOrderPayment(int|string $orderId, array $fields): void
+    private function finalizeOrderPayment(int|string $orderId, array $fields, ?string $paymentMethod = null): void
     {
         DB::table('order')
             ->where('id', $orderId)
@@ -288,6 +290,10 @@ class HomeController extends Controller
         DB::table('ordered_items')
             ->where('order_id', $orderId)
             ->update(['status' => 'Ordered', 'updated_at' => now()]);
+
+        if ($paymentMethod !== null) {
+            $this->inventoryOrderPush->pushPaidOrder($orderId, $paymentMethod);
+        }
     }
 
     private function recordPayment(int|string $orderId, int $totalPay, string $method, string $reference): void

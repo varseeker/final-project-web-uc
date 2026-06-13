@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Menu;
 use App\Models\cartItems;
+use App\Services\Inventory\InventoryMenuSyncService;
+use App\Support\MenuCatalog;
 use App\Support\MenuOptions;
 
 use Illuminate\Http\Request;
@@ -13,31 +15,33 @@ use Illuminate\Support\Facades\Session;
 
 class MenuController extends Controller
 {
+    public function __construct(
+        private InventoryMenuSyncService $inventoryMenuSync,
+    ) {}
+
     public function index()
     {
-        $menuItems = DB::table('menus')
-            ->select('name', 'description', 'category', 'price', 'most_ordered', 'img_url')
-            ->get();
-            
-        // Group by category manually
-        $grouped = collect($menuItems)->groupBy('category');
+        $this->inventoryMenuSync->syncIfStale();
 
-        return view('welcome', ['menuItems' => $grouped]);
+        $menuCatalog = MenuCatalog::build(
+            $this->visibleMenusQuery()
+                ->select('name', 'description', 'category', 'price', 'most_ordered', 'img_url')
+                ->get()
+        );
+
+        return view('welcome', compact('menuCatalog'));
     }
 
     public function orderPage()
     {
+        $this->inventoryMenuSync->syncIfStale();
 
-        $menuItems = DB::table('menus')
-            ->select('id', 'name', 'description', 'category', 'price', 'most_ordered', 'img_url', 'options')
-            ->get()
-            ->map(function ($item) {
-                $item->option_config = MenuOptions::forMenu($item);
-
-                return $item;
-            });
-
-        $groupedItems = $menuItems->groupBy('category');
+        $menuCatalog = MenuCatalog::build(
+            $this->visibleMenusQuery()
+                ->select('id', 'name', 'description', 'category', 'price', 'most_ordered', 'img_url', 'options')
+                ->get(),
+            withOptions: true
+        );
 
         $basketOwner = DB::table('carts')
             ->where('user_id', Auth::id())
@@ -69,7 +73,8 @@ class MenuController extends Controller
         return view('home', [
             'baskets' => $baskets,
             'cartCount' => $cartCount,
-        ], compact('groupedItems'));
+            'menuCatalog' => $menuCatalog,
+        ]);
 
         // return dd($basketOwner, $baskets);;
     }
@@ -162,6 +167,17 @@ class MenuController extends Controller
         }
 
         return redirect('home')->with('lastAct', 'Pesanan ditambahkan ke keranjang.');
+    }
+
+    private function visibleMenusQuery()
+    {
+        $query = DB::table('menus')->where('is_active', true);
+
+        if (config('inventory.enabled')) {
+            $query->whereNotNull('inventory_menu_code');
+        }
+
+        return $query;
     }
     
 }

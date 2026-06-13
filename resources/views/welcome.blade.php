@@ -20,41 +20,13 @@
     <a href="#main-content" class="skip-link">Lewati ke konten</a>
     @include('layouts.navbar')
 
-    <div id="main-content" class="container py-5">
-        <h2 class="fw-bold page-header">Our Menu</h2>
-        <p class="text-muted mb-4">Jelajahi menu favorit kami.</p>
+    <div id="main-content" class="container py-3 py-md-4 welcome-page">
+        <div class="welcome-page__hero mb-3">
+            <h2 class="fw-bold page-header welcome-page__title mb-1">Menu Warkop Kayu</h2>
+            <p class="text-muted small mb-0">Minuman, makanan, dan paket bundle — tap filter untuk lihat per kategori.</p>
+        </div>
 
-        @forelse ($menuItems as $category => $items)
-            <h4 class="fw-bold mb-3 category-heading" id="cat-{{ Str::slug($category) }}">{{ $category }}</h4>
-            <div class="row row-cols-1 gy-3 mb-5">
-                @foreach ($items as $item)
-                <div class="col">
-                  <div class="card menu-card h-100">
-                      <div class="card-body d-flex flex-column flex-md-row gap-3 align-items-md-center">
-                          <img src="{{ asset($item->img_url) }}" alt="{{ $item->name }}" class="menu-img flex-shrink-0" loading="lazy" width="80" height="80">
-
-                          <div class="flex-grow-1">
-                              <h5 class="card-title mb-1">{{ $item->name }}</h5>
-                              @if ($item->most_ordered)
-                                <span class="badge bg-danger text-white">Most Ordered</span>
-                              @endif
-                              <p class="card-text small text-muted mb-0 mt-1">{{ $item->description }}</p>
-                          </div>
-
-                          <div class="text-md-end price flex-shrink-0">
-                              Rp{{ number_format($item->price, 0, ',', '.') }}
-                          </div>
-                      </div>
-                  </div>
-                </div>
-                @endforeach
-            </div>
-        @empty
-            <div class="empty-state">
-                <i class="bi bi-cup-hot"></i>
-                <p class="fw-semibold mb-0">Menu belum tersedia</p>
-            </div>
-        @endforelse
+        @include('partials.welcome-menu-catalog')
     </div>
 
     <div class="mt-4 border-top">

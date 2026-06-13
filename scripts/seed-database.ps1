@@ -1,4 +1,4 @@
-# Underground Cafe — reset DB + migration seed + factory seeder
+# POS Warkop Kayu — reset DB + migration seed + factory seeder
 # Usage:
 #   .\scripts\seed-database.ps1          # migrate:fresh --seed (default)
 #   .\scripts\seed-database.ps1 -SeedOnly # db:seed saja (tanpa reset tabel)

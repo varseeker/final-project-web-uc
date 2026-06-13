@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Nasi Goreng Warkop">
+  <rect width="160" height="160" rx="18" fill="#fff8eb"/>
+  <ellipse cx="80" cy="104" rx="54" ry="20" fill="#d7ccc8"/>
+  <path d="M34 104c10-24 38-34 72-8 10 16-8 28-36 28S44 118 34 104z" fill="#ffcc80"/>
+  <circle cx="58" cy="78" r="9" fill="#fff" stroke="#fbc02d" stroke-width="3"/>
+  <rect x="92" y="70" width="24" height="8" rx="4" fill="#e53935" transform="rotate(20 104 74)"/>
+  <rect x="98" y="48" width="20" height="28" rx="4" fill="#fff" stroke="#6f4e37" stroke-width="2"/>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Indomie Double">
+  <rect width="160" height="160" rx="18" fill="#fff7e8"/>
+  <ellipse cx="58" cy="98" rx="34" ry="18" fill="#e8c468"/>
+  <path d="M30 98c6-22 28-30 56-8 6 14-8 24-28 24S36 112 30 98z" fill="#f4d03f"/>
+  <ellipse cx="102" cy="98" rx="34" ry="18" fill="#e8c468"/>
+  <path d="M74 98c6-22 28-30 56-8 6 14-8 24-28 24S80 112 74 98z" fill="#ffb300"/>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Indomie Telur">
+  <rect width="160" height="160" rx="18" fill="#fff7e8"/>
+  <ellipse cx="80" cy="98" rx="52" ry="22" fill="#e8c468"/>
+  <path d="M35 98c8-28 42-38 80-10 8 18-10 32-40 32S43 118 35 98z" fill="#f4d03f"/>
+  <circle cx="108" cy="72" r="16" fill="#fff" stroke="#e0a800" stroke-width="3"/>
+  <circle cx="108" cy="74" r="7" fill="#ffd54f"/>
+</svg>

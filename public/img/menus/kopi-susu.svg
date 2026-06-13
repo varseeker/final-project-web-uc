@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Kopi Susu">
+  <rect width="160" height="160" rx="18" fill="#f7f1ea"/>
+  <rect x="48" y="44" width="64" height="72" rx="12" fill="#fff" stroke="#6f4e37" stroke-width="4"/>
+  <path d="M54 44h52c0 0 10 12 10 22s-10 22-10 22H54z" fill="#4e342e"/>
+  <rect x="54" y="78" width="52" height="28" rx="6" fill="#d7ccc8"/>
+  <ellipse cx="80" cy="122" rx="28" ry="6" fill="#d7ccc8"/>
+</svg>

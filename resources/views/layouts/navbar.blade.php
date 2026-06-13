@@ -32,18 +32,20 @@
             <span class="navbar-text text-white-50 small d-none d-lg-inline">Login as</span>
             <span class="nav-link text-white fw-bold py-lg-1 d-inline-block">{{ Auth::user()->name }}</span>
           </li>
-          @if (Auth::user()->role == 'admin')
-            <li class="nav-item">
-              <a class="nav-link text-white" href="{{ route('dashboard') }}">
-                <i class="bi bi-speedometer2 me-1"></i>Dashboard
-              </a>
-            </li>
-          @endif
           <li class="nav-item">
             <a class="nav-link text-white" href="{{ route('home') }}">
               <i class="bi bi-cash-stack me-1"></i>POS
             </a>
           </li>
+          @if (Auth::user()->role == 'admin')
+            @if(config('inventory.enabled') && config('inventory.base_url'))
+            <li class="nav-item">
+              <a class="nav-link text-white" href="{{ config('inventory.base_url') }}" target="_blank" rel="noopener">
+                <i class="bi bi-box-seam me-1"></i>Management
+              </a>
+            </li>
+            @endif
+          @endif
           <li class="nav-item">
             <a class="nav-link text-white" href="{{ route('logout') }}"
                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

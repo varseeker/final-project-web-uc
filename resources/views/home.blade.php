@@ -125,7 +125,7 @@ data-cart-count="{{ $cartItemCount }}"
     </div>
 </div>
 
-    @include('partials.pos.menu-catalog', ['groupedItems' => $groupedItems])
+    @include('partials.pos.menu-catalog', ['menuCatalog' => $menuCatalog ?? null])
 
 </main>
 

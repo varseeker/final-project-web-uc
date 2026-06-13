@@ -27,6 +27,8 @@
       <th scope="col">Opsi Variant</th>
       <th scope="col">Most Ordered</th>
       <th scope="col">Image</th>
+      <th scope="col">Inventory Code</th>
+      <th scope="col">Status</th>
       <th scope="col">Manage</th>
     </tr>
   </thead>
@@ -42,10 +44,15 @@
         <span class="small">{{ implode(', ', $opts['variant']['options'] ?? []) }}</span>
       </td>
       <td class="align-middle">{{ $item->most_ordered ? 'Yes' : 'No' }}</td>
-      <td class="align-middle"
-      ><img class="image-fluid" style="max-width: 150px; max-height:250px;" src="
-        ../{{ $item->img_url }}" alt="">
-    </td>
+      <td class="align-middle"><img class="image-fluid" style="max-width: 150px; max-height:250px;" src="../{{ $item->img_url }}" alt=""></td>
+      <td class="align-middle">{{ $item->inventory_menu_code ?? '-' }}</td>
+      <td class="align-middle">
+        @if ($item->is_active ?? true)
+          <span class="badge text-bg-success">Active</span>
+        @else
+          <span class="badge text-bg-secondary">Inactive</span>
+        @endif
+      </td>
       <td class="align-middle">
         <a href="/dashboard/menu/{{ $item->id }}" class="text-white align-middle">
             <button  class="btn btn-outline-secondary">

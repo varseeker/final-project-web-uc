@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Indomie Kapal Api">
+  <rect width="160" height="160" rx="18" fill="#fff8eb"/>
+  <ellipse cx="56" cy="102" rx="36" ry="18" fill="#e8c468"/>
+  <path d="M28 102c6-20 26-28 52-8 6 12-8 22-26 22S34 114 28 102z" fill="#f4d03f"/>
+  <rect x="92" y="48" width="44" height="58" rx="8" fill="#fff" stroke="#6f4e37" stroke-width="3"/>
+  <path d="M98 48h32c0 0 8 10 8 18s-8 18-8 18H98z" fill="#4e342e"/>
+  <ellipse cx="114" cy="112" rx="18" ry="5" fill="#d7ccc8"/>
+</svg>
