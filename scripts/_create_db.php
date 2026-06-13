@@ -4,7 +4,7 @@ $host = getenv('DB_HOST') ?: '127.0.0.1';
 $port = getenv('DB_PORT') ?: '3306';
 $user = getenv('DB_USERNAME') ?: 'root';
 $pass = getenv('DB_PASSWORD') ?: '';
-$name = getenv('DB_DATABASE') ?: 'db_warkop_kayu';
+$name = getenv('DB_DATABASE') ?: 'warkop_db';
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
