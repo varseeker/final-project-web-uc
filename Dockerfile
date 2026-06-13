@@ -1,4 +1,18 @@
-FROM composer:2 AS vendor
+FROM php:8.2-cli-bookworm AS vendor
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    unzip \
+    libzip-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libxml2-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" zip gd \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
@@ -18,8 +32,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng-dev \
     libjpeg62-turbo-dev \
     libfreetype6-dev \
+    libxml2-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" pdo pdo_pgsql zip gd opcache \
+    && docker-php-ext-install -j"$(nproc)" pdo pdo_pgsql pdo_mysql zip gd opcache \
     && rm -rf /var/lib/apt/lists/*
 
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-render.ini
@@ -31,9 +46,9 @@ COPY --from=vendor /app /var/www/html
 
 WORKDIR /var/www/html
 
-RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache public/img/menuImg \
+RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs storage/app/menu-cache bootstrap/cache public/img/menuImg \
     && chown -R www-data:www-data storage bootstrap/cache public/img/menuImg \
-    && chmod -R 775 storage bootstrap/cache public/img/menuImg
+    && chmod -R 775 storage bootstrap/cache public/img/menuImg storage/app/menu-cache
 
 EXPOSE 8080
 
