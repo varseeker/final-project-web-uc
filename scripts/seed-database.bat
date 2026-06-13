@@ -15,5 +15,5 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo Done. Admin ^(migration^): test@test / 123 ^| Factory users: password
+echo Done. Login POS: akun staff dari Inventory (contoh letoy@warkopkayu.test / password)
 exit /b 0

@@ -23,4 +23,4 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-Write-Host "Done. Admin (migration): test@test / 123 | Factory users: password" -ForegroundColor Green
+Write-Host "Done. Login POS: akun staff dari Inventory (contoh letoy@warkopkayu.test / password)" -ForegroundColor Green

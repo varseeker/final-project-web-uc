@@ -9,7 +9,7 @@ Route::get('/media/menu/{v}/{src}', [App\Http\Controllers\MenuDisplayImageContro
     ->where('src', '[A-Za-z0-9_-]+')
     ->name('media.menu.show');
 
-Auth::routes();
+Auth::routes(['register' => false]);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [App\Http\Controllers\MenuController::class, 'orderPage'])->name('home');

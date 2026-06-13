@@ -15,10 +15,10 @@ return new class extends Migration
         $userForeignName = config('laravel-cart.users.foreign_id', 'user_id');
         $table = config('laravel-cart.carts.table', 'carts');
 
-        Schema::create($table, function (Blueprint $table) use ($userTableName, $userForeignName) {
+        Schema::create($table, function (Blueprint $table) use ($userForeignName) {
             $table->id();
 
-            $table->foreignId($userForeignName)->constrained($userTableName)->cascadeOnDelete();
+            $table->unsignedBigInteger($userForeignName)->index();
 
             $table->timestamps();
         });

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('customer')->nullable();
             $table->enum('status', ['waiting-payment', 'void', 'paid']);
             $table->enum('payment-status', ['pending', 'expired', 'failed', 'success']);
-            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->unsignedBigInteger('user_id')->index();
             $table->string('payReference')->nullable();
             $table->timestamp('updated_at')->nullable();
             $table->timestamp('created_at')->nullable();

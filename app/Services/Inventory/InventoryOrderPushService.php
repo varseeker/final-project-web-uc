@@ -23,7 +23,7 @@ class InventoryOrderPushService
             return;
         }
 
-        $cashierName = DB::table('users')->where('id', $order->user_id)->value('name');
+        $cashierName = \App\Models\User::query()->where('id', $order->user_id)->value('name');
 
         $payment = DB::table('payment')
             ->where('order_id', $orderId)

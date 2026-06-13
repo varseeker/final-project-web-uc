@@ -7,11 +7,14 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * POS memakai tabel users dari Inventory (koneksi shared, tanpa prefix).
-     * Migration ini hanya membuat sesi POS (pos_sessions) agar tidak bentrok dengan sessions inventory.
+     * Hapus tabel auth POS lama dari deploy gagal (pos_users, pos_password_reset_tokens).
+     * Data user utama ada di tabel users inventory (tanpa prefix).
      */
     public function up(): void
     {
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
+
         if (Schema::hasTable('sessions')) {
             return;
         }
@@ -28,6 +31,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('sessions');
+        // Tidak dibuat ulang — user dikelola oleh Inventory Management System.
     }
 };

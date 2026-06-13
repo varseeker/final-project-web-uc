@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->references('id')->on('order')->onDelete('cascade');
             $table->foreignId('menu_id')->references('id')->on('menus')->onDelete('cascade');
-            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->unsignedBigInteger('user_id')->index();
             $table->unsignedInteger('quantity')->default(1);
             $table->string('variant');
             $table->string('size');
