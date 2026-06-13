@@ -22,7 +22,9 @@ services:
       - key: DB_PREFIX
         value: pos_
       - key: DB_MIGRATION_TABLE
-        value: pos_migrations
+        value: migrations
+      - key: RENDER_REGION
+        value: singapore
       - key: APP_ENV
         value: production
       - key: APP_DEBUG

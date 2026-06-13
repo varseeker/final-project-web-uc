@@ -84,7 +84,7 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DB_URL'),
+            'url' => env('DB_URL', env('DATABASE_URL')),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
             'database' => env('DB_DATABASE', 'laravel'),
@@ -126,7 +126,7 @@ return [
     */
 
     'migrations' => [
-        'table' => env('DB_MIGRATION_TABLE', 'pos_migrations'),
+        'table' => env('DB_MIGRATION_TABLE', 'migrations'),
         'update_date_on_publish' => true,
     ],
 

@@ -46,7 +46,8 @@ COPY --from=vendor /app /var/www/html
 
 WORKDIR /var/www/html
 
-RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs storage/app/menu-cache bootstrap/cache public/img/menuImg \
+RUN chmod +x /var/www/html/docker/fix-render-env.sh \
+    && mkdir -p storage/framework/{cache,sessions,views} storage/logs storage/app/menu-cache bootstrap/cache public/img/menuImg \
     && chown -R www-data:www-data storage bootstrap/cache public/img/menuImg \
     && chmod -R 775 storage bootstrap/cache public/img/menuImg storage/app/menu-cache
 

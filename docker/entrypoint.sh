@@ -3,6 +3,8 @@ set -e
 
 cd /var/www/html
 
+. /var/www/html/docker/fix-render-env.sh
+
 export PORT="${PORT:-8080}"
 
 mkdir -p storage/framework/{cache,sessions,views} storage/logs storage/app/menu-cache bootstrap/cache public/img/menuImg
