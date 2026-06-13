@@ -13,7 +13,6 @@ Auth::routes(['register' => false]);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [App\Http\Controllers\MenuController::class, 'orderPage'])->name('home');
-    Route::get('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
     Route::delete('/home', [App\Http\Controllers\MenuController::class, 'destroy']);
     Route::put('/home', [App\Http\Controllers\MenuController::class, 'reduceItems']);
     Route::post('/home/store', [App\Http\Controllers\MenuController::class, 'store']);
