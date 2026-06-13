@@ -150,47 +150,36 @@
       document.getElementById('pay-button').onclick = function() {
               snap.pay('{{ $snapToken }}', {
                   onSuccess: function(result) {
-                    // window.location.href = "{{ $successUrl }}";
-                    fetch("/payment/store", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                        },
-                        body: JSON.stringify(result)
-                    }).then(response => {
-                        
-                      // Buat form baru
                       const form = document.createElement('form');
                       form.method = 'POST';
                       form.action = "{{ $successUrl }}";
 
-                      // Tambahkan CSRF token
                       const csrf = document.createElement('input');
                       csrf.type = 'hidden';
                       csrf.name = '_token';
                       csrf.value = '{{ csrf_token() }}';
                       form.appendChild(csrf);
 
-                      
                       const cartToDelete = document.createElement('input');
                       cartToDelete.type = 'hidden';
                       cartToDelete.name = 'cartToDelete';
                       cartToDelete.value = '{{ $orderTarget }}';
                       form.appendChild(cartToDelete);
 
-                      // (Opsional) Tambahkan data lain dari result
                       const orderIdInput = document.createElement('input');
                       orderIdInput.type = 'hidden';
                       orderIdInput.name = 'order_id';
-                      orderIdInput.value = result.order_id;
+                      orderIdInput.value = result.order_id || result.transaction_id || '-';
                       form.appendChild(orderIdInput);
 
-                      // Tambahkan form ke body dan submit
+                      const customerName = document.createElement('input');
+                      customerName.type = 'hidden';
+                      customerName.name = 'customerName';
+                      customerName.value = @json($csName);
+                      form.appendChild(customerName);
+
                       document.body.appendChild(form);
                       form.submit();
-
-                    })
                   },
                   onPending: function(result) {
                       // Tangani jika pembayaran pending

@@ -1,32 +1,141 @@
-/* Reset Bootstrap */
+/* Warkop Kayu — tema coklat konsisten */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Base Styles */
+:root {
+    --primary-color: #503b31;
+    --primary-hover-color: #6b5248;
+    --primary-active-color: #3d2e26;
+    --secondary-color: #705d56;
+    --secondary-hover-color: #8b7168;
+    --accent-color: #aa8a7e;
+    --surface-color: #f8f9fa;
+    --surface-warm: #f3f0ee;
+    --surface-card: #ffffff;
+    --text-color: #333333;
+    --text-muted: #6c757d;
+    --border-color: #e0d6d1;
+    --footer-color: #4e3a32;
+    --bs-primary: #503b31;
+    --bs-primary-rgb: 80, 59, 49;
+    --bs-success: #503b31;
+    --bs-success-rgb: 80, 59, 49;
+    --bs-link-color: #503b31;
+    --bs-link-hover-color: #6b5248;
+}
+
 body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fa;
-    color: #333;
+    background-color: var(--surface-color);
+    color: var(--text-color);
 }
 
 a {
-    color: #007bff;
+    color: var(--primary-color);
     text-decoration: none;
 }
 
 a:hover {
-    color: #0056b3;
+    color: var(--primary-hover-color);
 }
 
-/* Custom Blue Theme */
-:root {
-    --primary-color: #503b31;
-    --secondary-color: #705d56;
-    --primary-hover-color: #8b7168;
-    --secondary-hover-color: #aa8a7e;
+/* ——— Komponen utama ——— */
+.navbar,
+.btn-primary,
+.section-kelebihan .card-header,
+.table-dark {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+    border-color: var(--primary-color) !important;
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link,
+.navbar .navbar-text {
+    color: #fff !important;
+}
+
+.btn-primary,
+.btn-success {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+    background-color: var(--primary-hover-color) !important;
+    border-color: var(--primary-hover-color) !important;
+    color: #fff !important;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+    color: #fff !important;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+    background-color: var(--secondary-hover-color) !important;
+    border-color: var(--secondary-hover-color) !important;
+}
+
+.btn-outline-secondary {
+    color: var(--primary-color) !important;
+    border-color: var(--secondary-color) !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--surface-warm) !important;
+    color: var(--primary-color) !important;
+    border-color: var(--primary-hover-color) !important;
+}
+
+.btn-outline-warning {
+    color: var(--primary-color) !important;
+    border-color: var(--accent-color) !important;
+}
+
+.btn-outline-warning:hover {
+    background-color: var(--surface-warm) !important;
+    color: var(--primary-active-color) !important;
+    border-color: var(--primary-hover-color) !important;
+}
+
+.btn-outline-danger:hover {
+    background-color: #fff5f5;
+}
+
+.btn-link {
+    color: var(--primary-color) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--accent-color) !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(80, 59, 49, 0.2);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .menu-img {
@@ -34,27 +143,8 @@ a:hover {
     height: 80px;
     object-fit: cover;
     border-radius: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
 }
-
-.navbar,
-.btn-primary,
-.section-kelebihan .card-header {
-    background-color: var(--primary-color);
-    color: #fff;
-}
-
-.btn-success {
-    background-color: #503b31 !important;
-}
-/* .btn-outline-success {
-    background-color: #503b31 !important;
-    font: #fff;
-}
-.bs-outline-success {
-    background-color: #503b31 !important;
-    font: #fff;
-} */
 
 .hero-section {
     background-size: cover;
@@ -77,37 +167,23 @@ a:hover {
 }
 
 .btn-primary {
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 5px;
+    padding: 0.65rem 1.5rem;
+    border-radius: 0.5rem;
     cursor: pointer;
-}
-
-.btn-primary:hover,
-.btn-primary:active {
-    background-color: var(--primary-hover-color);
-}
-
-.btn-secondary {
-    background-color: var(--secondary-color);
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.btn-secondary:hover,
-.btn-secondary:active,
-.btn-secondary:focus {
-    background-color: var(--secondary-hover-color);
 }
 
 .section-kelebihan {
     margin-top: 4rem;
 }
 
-.section-kelebihan h2 {
+.section-kelebihan h2,
+.section-about-us h2,
+.page-header,
+.category-heading {
     color: var(--primary-color);
+}
+
+.section-kelebihan h2 {
     font-size: 2rem;
     margin-bottom: 2rem;
 }
@@ -120,7 +196,7 @@ a:hover {
 
 .section-kelebihan .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .section-kelebihan .card-header {
@@ -132,29 +208,28 @@ a:hover {
     padding: 1rem 2rem;
 }
 
-/* Section About Us */
 .section-about-us {
     margin-top: 4rem;
 }
 
 .section-about-us h2 {
-    color: var(--primary-color);
     font-size: 2rem;
     margin-bottom: 2rem;
 }
 
 .section-about-us p {
-    line-height: 1.5; /* Adjust line-height as needed */
+    line-height: 1.5;
 }
 
 .card {
-    border: 2px solid #000;
+    border: 1px solid var(--border-color);
     border-radius: 1rem;
+    background: var(--surface-card);
     transition: all 0.2s ease-in-out;
 }
 
-.card:hover {
-    background-color: #f3f3f3;
+.card:not(.menu-card):not(.dashboard-card):hover {
+    background-color: var(--surface-warm);
 }
 
 .card-title {
@@ -165,25 +240,25 @@ a:hover {
 .price {
     font-weight: 700;
     font-size: 1.25rem;
+    color: var(--primary-color);
 }
 
-footer {
-    background-color: #4e3a32;
-    color: white;
+footer,
+.footer {
+    background-color: var(--footer-color) !important;
+    color: #fff !important;
 }
 
 .footer-links a {
-    color: white;
-    margin: 0 1rem;
-    text-decoration: none;
+    color: #fff !important;
 }
 
 .footer-links a:hover {
-    color: #ccc;
+    color: var(--accent-color) !important;
 }
 
 footer .copyright {
-    color: #bbb;
+    color: rgba(255, 255, 255, 0.75);
     font-size: 0.85rem;
 }
 
@@ -197,7 +272,6 @@ footer .copyright {
     border-top-left-radius: 1rem !important;
 }
 
-/* Media Queries for Responsiveness */
 @media (max-width: 768px) {
     .hero-section h1 {
         font-size: 2.5rem;
@@ -216,10 +290,7 @@ footer .copyright {
         margin-bottom: 1.5rem;
     }
 
-    .section-kelebihan h2 {
-        font-size: 1.5rem;
-    }
-
+    .section-kelebihan h2,
     .section-about-us h2 {
         font-size: 1.5rem;
     }

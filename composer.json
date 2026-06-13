@@ -59,6 +59,12 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
+        ],
+        "db:seed-all": [
+            "@php artisan migrate:fresh --seed --force"
+        ],
+        "db:seed-only": [
+            "@php artisan db:seed --force"
         ]
     },
     "extra": {

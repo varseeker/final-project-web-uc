@@ -72,6 +72,11 @@
 
     </div>
 
+    @include('partials.admin.menu-options-fields', [
+        'optionsJson' => $optionsJson ?? null,
+        'category' => $category ?? $item->category,
+    ])
+
     <div class="my-2">
       <label for="formFile" class="form-label">Upload replacement image.</label>
       <input class="form-control" type="file" id="formFile" name="gambar">

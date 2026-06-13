@@ -47,15 +47,8 @@
       <td class="align-middle">{{ $cashier->name }}</td>
       <td class="align-middle">{{ $cashier->payReference }}</td>
       <td class="align-middle">
-        <a href="/dashboard/order/{{ $cashier->id }}" class="text-white align-middle">
-            <button  class="btn btn-outline-secondary">
-                void
-            </button>
-        </a>
-        <a href="/dashboard/order/{{ $cashier->id }}" class="text-white align-middle">
-            <button  class="btn btn-outline-primary">
-                Ordered Items
-            </button>
+        <a href="/dashboard/order/{{ $cashier->id }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-list-ul me-1"></i>Detail Pesanan
         </a>
       </td>
     </tr>

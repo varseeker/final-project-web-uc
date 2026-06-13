@@ -1,0 +1,63 @@
+@php
+    $total = 0;
+    $showActions = ($mode ?? 'cart') === 'cart';
+@endphp
+
+<div class="pos-cart-list">
+    @forelse ($baskets as $rock)
+        @php $lineTotal = $rock->subtotal ?? ($rock->quantity * $rock->price); $total += $lineTotal; @endphp
+        <article class="pos-cart-item">
+            <div class="pos-cart-item__main">
+                <h6 class="pos-cart-item__title mb-1">{{ $rock->name }}</h6>
+                <p class="pos-cart-item__meta small text-muted mb-1">
+                    {{ $rock->variant }} · {{ $rock->size }}
+                    @if($rock->ice && $rock->ice !== '-')
+                        · {{ $rock->ice }}
+                    @endif
+                    @if($rock->sugar && $rock->sugar !== '-')
+                        · {{ $rock->sugar }}
+                    @endif
+                </p>
+                <p class="pos-cart-item__price small mb-0">
+                    {{ $rock->quantity }} × Rp{{ number_format($rock->price, 0, ',', '.') }}
+                    <span class="fw-bold text-dark ms-1">Rp{{ number_format($lineTotal, 0, ',', '.') }}</span>
+                </p>
+            </div>
+            @if($showActions)
+                <div class="pos-cart-item__actions">
+                    @if($rock->quantity > 1)
+                        <form action="{{ url('/home') }}" method="POST" class="d-inline">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="update-target" value="{{ $rock->id }}">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Kurangi">
+                                <i class="bi bi-dash-lg"></i>
+                            </button>
+                        </form>
+                    @endif
+                    <form action="{{ url('/home') }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="delete-target" value="{{ $rock->id }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            @endif
+        </article>
+    @empty
+        <div class="empty-state py-4">
+            <i class="bi bi-cart-x"></i>
+            <p class="mb-0 fw-semibold">Keranjang masih kosong</p>
+            <p class="small mb-0">Pilih menu untuk menambahkan pesanan.</p>
+        </div>
+    @endforelse
+</div>
+
+@if(count($baskets) > 0)
+    <div class="pos-cart-summary">
+        <span>Subtotal</span>
+        <strong>Rp{{ number_format($total, 0, ',', '.') }}</strong>
+    </div>
+@endif

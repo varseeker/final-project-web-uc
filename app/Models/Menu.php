@@ -14,6 +14,15 @@ class Menu extends Model
         'price',
         'most_ordered',
         'img_url',
+        'options',
         'subtotal',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'most_ordered' => 'boolean',
+            'options' => 'array',
+        ];
+    }
 }

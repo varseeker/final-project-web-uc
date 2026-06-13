@@ -39,69 +39,37 @@ class HomeController extends Controller
     
     public function reciept(Request $request)
     {
-        
-        $basketOwner = DB::table('carts')
-            ->where('user_id', Auth::id())
-            ->latest() // ambil yang paling baru
-            ->first();
+        $orderId = $request->input('cartToDelete');
+        $order = DB::table('order')->where('id', $orderId)->first();
 
-        $baskets = DB::table('cart_items')
-            ->where('cart_id', $basketOwner->id)
-            ->join('menus', 'menu_id', '=', 'menus.id')
-            ->select('cart_items.id', 'cart_id', 'menu_id', 'menus.name', 'menus.description', 'menus.price', 'quantity', 'variant', 'size', 'ice', 'sugar', 'subtotal')
-            ->get();
+        if (! $order) {
+            return redirect('home')->with('lastAct', 'Pesanan tidak ditemukan.');
+        }
 
-        DB::table('carts')->where('id', $basketOwner->id)->delete();
+        $total = (int) $this->getOrderItems($orderId)->sum('subtotal');
+        $pay = (int) preg_replace('/\D/', '', (string) $request->input('cashAmount', 0));
+        $change = max(0, $pay - $total);
 
-        
-        
-        $pay = str_replace(['+', '-'], '', filter_var($request->cashAmount, FILTER_SANITIZE_NUMBER_INT));
-        $wallet = $baskets->map(function ($item) use (&$total) {
-            $item->subtotal = $item->price * $item->quantity;
+        $cashReference = $this->generateCashTransactionReference();
 
-            // total semua item di keranjang
-            $total += $item->subtotal;
-        });
-        $change = $total - $pay ;
-        $change = abs($change);
-        
+        $this->clearUserCart();
+        $this->finalizeOrderPayment($orderId, [
+            'status' => 'paid',
+            'amountPaid' => $pay,
+            'amountChange' => $change,
+            'payment-status' => 'success',
+            'payReference' => $cashReference,
+        ]);
+        $this->recordPayment($orderId, $pay, 'Cash', $cashReference);
 
-
-        // dd($total, str_replace(['+', '-'], '', filter_var($request->cashAmount, FILTER_SANITIZE_NUMBER_INT)));
-
-        DB::table('order')
-            ->where('id', $request->input('cartToDelete'))
-            ->where('status', 'waiting-payment')
-            ->where('payment-status', 'pending')
-            ->update([
-                'status'  => 'paid',
-                'amountPaid'  => str_replace(['+', '-'], '', filter_var($request->cashAmount, FILTER_SANITIZE_NUMBER_INT)),
-                'amountChange'  => $change,
-                'payment-status'     => 'success',
-                'payReference'     => 'OnCashier_ByCash',
-            ]);
-
-        
-        DB::table('ordered_items')
-            ->where('order_id', $request->input('cartToDelete'))
-            ->where('status', 'waiting-payment')
-            ->update([
-                'status'  => 'Ordered',
-            ]);
-
-        DB::table('payment')->insert([
-                'order_id' => $request->input('cartToDelete'),
-                'totalPay' => str_replace(['+', '-'], '', filter_var($request->cashAmount, FILTER_SANITIZE_NUMBER_INT)),
-                'method' => 'Cash',
-                'status' => 'success',
-                'reference' => '-'
-            ]);
-
-        $csName = $request->customerName;
-        
-
-        // return dd($snapToken);
-        return view('reciept', ['baskets' => $baskets])->with('csName', $csName)->with('pay', $pay);
+        return $this->receiptView(
+            $orderId,
+            $request->input('customerName', $order->customer),
+            $pay,
+            $change,
+            'Tunai',
+            $cashReference
+        );
     }
 
     public function orderPage(Request $request)
@@ -178,7 +146,7 @@ class HomeController extends Controller
 
         $params = [
             'transaction_details' => [
-                'order_id' => 'CAUN-TRXMIDTRANS-'.rand().'-'.date("Ymd"),
+                'order_id' => 'KAYU-TRXMIDTRANS-'.rand().'-'.date("Ymd"),
                 'gross_amount' => $total,
             ]
             // 'customer_details' => [
@@ -218,69 +186,153 @@ class HomeController extends Controller
 
     public function paymentSuccess(Request $request)
     {
+        $orderId = $request->input('cartToDelete');
+        $order = DB::table('order')->where('id', $orderId)->first();
 
-        // try {
-
-        $basketOwner = DB::table('carts')
-            ->where('user_id', Auth::id())
-            ->latest() // ambil yang paling baru
-            ->first();
-        // return dd( $basketOwner );
-
-        try {
-            DB::table('carts')->where('id', $basketOwner->id)->delete();
-        } catch (\Throwable $th) {
-            
-            return redirect('home');
+        if (! $order) {
+            return redirect('home')->with('lastAct', 'Pesanan tidak ditemukan.');
         }
-        DB::table('carts')->where('id', $basketOwner->id)->delete();
 
-        DB::table('order')
-            ->where('id', $request->input('cartToDelete'))
-            ->where('status', 'waiting-payment')
-            ->where('payment-status', 'pending')
-            ->update([
-                'status'  => 'paid',
-                'payment-status'     => 'success',
-                'payReference'     => $request->input('order_id'),
+        $payReference = $request->input('order_id', $order->payReference ?? '-');
+        $total = (int) ($order->total ?? 0);
+        $pay = (int) ($order->amountPaid ?? $total);
+        $change = 0;
+
+        $this->clearUserCart();
+
+        if ($order->{'payment-status'} !== 'success') {
+            $this->finalizeOrderPayment($orderId, [
+                'status' => 'paid',
+                'amountPaid' => $total,
+                'amountChange' => $change,
+                'payment-status' => 'success',
+                'payReference' => $payReference,
             ]);
+            $this->recordPayment($orderId, $total, 'QRIS', $payReference);
+            $pay = $total;
+        }
 
-        
-        DB::table('ordered_items')
-            ->where('order_id', $request->input('cartToDelete'))
-            ->where('status', 'waiting-payment')
-            ->update([
-                'status'  => 'Ordered',
-            ]);
+        return $this->receiptView(
+            $orderId,
+            $request->input('customerName', $order->customer),
+            $pay,
+            $change,
+            'QRIS',
+            $payReference
+        );
+    }
 
-        $money = DB::table('order')
-            ->where('id', $request->input('cartToDelete'))
-            ->select('total')
+    private function getOrderItems(int|string $orderId)
+    {
+        $baskets = DB::table('ordered_items')
+            ->where('order_id', $orderId)
+            ->join('menus', 'ordered_items.menu_id', '=', 'menus.id')
+            ->select(
+                'ordered_items.id',
+                'menus.name',
+                'menus.price',
+                'ordered_items.quantity',
+                'ordered_items.variant',
+                'ordered_items.size',
+                'ordered_items.ice',
+                'ordered_items.sugar',
+                'ordered_items.subtotal'
+            )
             ->get();
-            
+
+        if ($baskets->isEmpty()) {
+            $basketOwner = DB::table('carts')->where('user_id', Auth::id())->latest()->first();
+            if ($basketOwner) {
+                $baskets = DB::table('cart_items')
+                    ->where('cart_id', $basketOwner->id)
+                    ->join('menus', 'cart_items.menu_id', '=', 'menus.id')
+                    ->select(
+                        'cart_items.id',
+                        'menus.name',
+                        'menus.price',
+                        'cart_items.quantity',
+                        'cart_items.variant',
+                        'cart_items.size',
+                        'cart_items.ice',
+                        'cart_items.sugar',
+                        'cart_items.subtotal'
+                    )
+                    ->get();
+            }
+        }
+
+        return $baskets->map(function ($item) {
+            $item->subtotal = $item->subtotal ?? ($item->price * $item->quantity);
+
+            return $item;
+        });
+    }
+
+    private function clearUserCart(): void
+    {
+        $basketOwner = DB::table('carts')->where('user_id', Auth::id())->latest()->first();
+        if (! $basketOwner) {
+            return;
+        }
+
+        DB::table('cart_items')->where('cart_id', $basketOwner->id)->delete();
+        DB::table('carts')->where('id', $basketOwner->id)->delete();
+    }
+
+    private function finalizeOrderPayment(int|string $orderId, array $fields): void
+    {
+        DB::table('order')
+            ->where('id', $orderId)
+            ->update(array_merge($fields, ['updated_at' => now()]));
+
+        DB::table('ordered_items')
+            ->where('order_id', $orderId)
+            ->update(['status' => 'Ordered', 'updated_at' => now()]);
+    }
+
+    private function recordPayment(int|string $orderId, int $totalPay, string $method, string $reference): void
+    {
+        if (DB::table('payment')->where('order_id', $orderId)->exists()) {
+            return;
+        }
+
         DB::table('payment')->insert([
-                'order_id' => $request->input('cartToDelete'),
-                'totalPay' => $money[0]->total,
-                'method' => 'QRIS',
-                'status' => 'success',
-                'reference' => $request->input('order_id')
-            ]);
-            
-        $basketOwner = DB::table('carts')
-            ->where('user_id', Auth::id())
-            ->latest() // ambil yang paling baru
-            ->first();
-        // return dd( $basketOwner );
+            'order_id' => $orderId,
+            'totalPay' => $totalPay,
+            'method' => $method,
+            'status' => 'success',
+            'reference' => $reference,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
 
+    private function generateCashTransactionReference(): string
+    {
+        return 'KAYU-TRXCASH-'.rand().'-'.date('Ymd');
+    }
 
-        // return dd( $request );
-        return redirect('home');
+    private function receiptView(
+        int|string $orderId,
+        ?string $csName,
+        int $pay,
+        int $change,
+        string $paymentMethod,
+        string $payReference = '-'
+    ) {
+        $baskets = $this->getOrderItems($orderId);
+        $total = (int) $baskets->sum('subtotal');
 
-    // } catch (\Exception $e) {
-
-    // }
-        
-        
-        // return dd( $request->cartToDelete, $request->order_id );
+        return view('reciept', [
+            'baskets' => $baskets,
+            'csName' => $csName ?? 'Pelanggan',
+            'pay' => $pay,
+            'change' => $change,
+            'total' => $total,
+            'orderId' => $orderId,
+            'paymentMethod' => $paymentMethod,
+            'payReference' => $payReference,
+            'orderAt' => now()->timezone('Asia/Jakarta')->format('d/m/Y H:i'),
+        ]);
     }
 }

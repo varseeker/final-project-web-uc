@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Support\MenuOptions;
 
 
 class AdminController extends Controller
@@ -22,7 +23,8 @@ class AdminController extends Controller
     public function indexMenu()
     {
         $menuItems = DB::table('menus')
-            ->select('id', 'name', 'description', 'category', 'price', 'most_ordered', 'img_url')
+            ->select('id', 'name', 'description', 'category', 'price', 'most_ordered', 'img_url', 'options')
+            ->orderByDesc('id')
             ->get();
             
         return view('management/menu', ['menuItems' => $menuItems]);
@@ -30,12 +32,20 @@ class AdminController extends Controller
 
     public function detailMenu(Request $request)
     {
-        $menuItems = DB::table('menus')
+        $item = DB::table('menus')
             ->where('id', $request->route('id'))
-            ->select('id', 'name', 'description', 'category', 'price', 'most_ordered', 'img_url')
-            ->get();
-            
-        return view('management/menuDetail', ['menuItems' => $menuItems]);
+            ->select('id', 'name', 'description', 'category', 'price', 'most_ordered', 'img_url', 'options')
+            ->first();
+
+        if (! $item) {
+            abort(404);
+        }
+
+        return view('management/menuDetail', [
+            'menuItems' => collect([$item]),
+            'optionsJson' => $item->options,
+            'category' => $item->category,
+        ]);
 
         
     }
@@ -63,26 +73,26 @@ class AdminController extends Controller
             
             
         Menu::where('id', $request->route('id'))
-                        ->update([
+                        ->update(array_merge([
                             'name' => $request->name,
                             'description' => $request->description,
-                            'category' => str_replace([" / Click to change"], '', $request->category),
+                            'category' => $this->normalizeMenuCategory($request->category),
                             'price' => str_replace(['+', '-'], '', filter_var($request->price, FILTER_SANITIZE_NUMBER_INT)),
                             'most_ordered' => $request->has('most_ordered'),
-                            'img_url' => $path
-                        ]);
+                            'img_url' => $path,
+                        ], $this->menuOptionsPayload($request)));
                     return redirect()->route('menuData');
                     // return dd($request, $path);
         }else{
 
         Menu::where('id', $request->route('id'))
-                        ->update([
+                        ->update(array_merge([
                             'name' => $request->name,
                             'description' => $request->description,
-                            'category' => str_replace([" / Click to change"], '', $request->category),
+                            'category' => $this->normalizeMenuCategory($request->category),
                             'price' => str_replace(['+', '-'], '', filter_var($request->price, FILTER_SANITIZE_NUMBER_INT)),
-                            'most_ordered' => $request->has('most_ordered')
-                        ]);
+                            'most_ordered' => $request->has('most_ordered'),
+                        ], $this->menuOptionsPayload($request)));
                         return redirect()->route('menuData');
                     // return dd($request);
 
@@ -110,26 +120,26 @@ class AdminController extends Controller
 		    $file->move('img/menuImg',$file->getClientOriginalName());
             
             
-        Menu::create([
+        Menu::create(array_merge([
                         'name' => $request->name,
                         'description' => $request->description,
-                        'category' => $request->category,
+                        'category' => $this->normalizeMenuCategory($request->category),
                         'price' => str_replace(['+', '-'], '', filter_var($request->price, FILTER_SANITIZE_NUMBER_INT)),
                         'most_ordered' => $request->has('most_ordered'),
-                        'img_url' => $path
-                    ]);
+                        'img_url' => $path,
+                    ], $this->menuOptionsPayload($request)));
                     return redirect()->route('menuData');
                     // return dd($request, $path);
         }else{
 
-        Menu::create([
+        Menu::create(array_merge([
                         'name' => $request->name,
                         'description' => $request->description,
-                        'category' => $request->category,
+                        'category' => $this->normalizeMenuCategory($request->category),
                         'price' => str_replace(['+', '-'], '', filter_var($request->price, FILTER_SANITIZE_NUMBER_INT)),
                         'most_ordered' => $request->has('most_ordered'),
-                        'img_url' => 'img/item_placeholder.png'
-                    ]);
+                        'img_url' => 'img/item_placeholder.png',
+                    ], $this->menuOptionsPayload($request)));
                     return redirect()->route('menuData');
                     // return dd($request);
 
@@ -139,6 +149,26 @@ class AdminController extends Controller
     }
 
     
+    private function normalizeMenuCategory(string $category): string
+    {
+        $category = str_replace([' / Click to change'], '', $category);
+
+        return $category === 'Non-Coffee' ? 'Non-coffee' : $category;
+    }
+
+    private function menuOptionsPayload(Request $request): array
+    {
+        $options = MenuOptions::buildFromAdminRequest($request);
+
+        if ($options === null) {
+            $category = $this->normalizeMenuCategory($request->category);
+
+            return ['options' => json_encode(MenuOptions::defaultsForCategory($category))];
+        }
+
+        return ['options' => $options];
+    }
+
     // Menu management -------------------------------------------------
 
     // Crew management -------------------------------------------------
@@ -244,21 +274,51 @@ class AdminController extends Controller
     
     // Menu management -------------------------------------------------
     
-    public function detailOrder()
+    public function detailOrder($id)
     {
-        $cashiers = DB::table('order')
-            ->join('users', 'user_id', '=', 'users.id')
-            ->select('total', 'amountPaid', 'amountChange', 'payReference')
+        $order = DB::table('order')
+            ->join('users', 'order.user_id', '=', 'users.id')
+            ->where('order.id', $id)
+            ->select(
+                'order.id',
+                'order.total',
+                'order.amountPaid',
+                'order.amountChange',
+                'order.customer',
+                'order.status',
+                'order.payment-status',
+                'order.payReference',
+                'order.created_at',
+                'users.name as cashier_name'
+            )
+            ->first();
+
+        if (! $order) {
+            abort(404);
+        }
+
+        $orderItems = DB::table('ordered_items')
+            ->where('ordered_items.order_id', $id)
+            ->join('menus', 'ordered_items.menu_id', '=', 'menus.id')
+            ->select(
+                'ordered_items.id',
+                'ordered_items.order_id',
+                'menus.name as menu_name',
+                'menus.price as menu_price',
+                'ordered_items.quantity',
+                'ordered_items.variant',
+                'ordered_items.size',
+                'ordered_items.ice',
+                'ordered_items.sugar',
+                'ordered_items.subtotal',
+                'ordered_items.status'
+            )
             ->get();
 
-        $cashierItems = DB::table('ordered_items')
-            ->join('menus', 'menu_id', '=', 'menus.id')
-            ->join('users', 'user_id', '=', 'users.id')
-            ->select('ordered_items.id', 'order_id', 'menus.name', 'users.name', 'quantity', 'variant', 'size', 'ice', 'sugar', 'subtotal', 'status')
-            ->get();
-
-        // return dd( $cashierItems);
-        return view('management/orderDetail', ['cashierItems' => $cashierItems] );
+        return view('management/orderDetail', [
+            'order' => $order,
+            'orderItems' => $orderItems,
+        ]);
     }
 
     public function exportOrder() 
@@ -272,12 +332,87 @@ class AdminController extends Controller
     {
 
         $payments = DB::table('payment')
-            // ->join('users', 'user_id', '=', 'users.id')
-            ->select('id', 'order_id', 'totalPay', 'method', 'status', 'reference')
+            ->leftJoin('order', 'payment.order_id', '=', 'order.id')
+            ->select(
+                'payment.id',
+                'payment.order_id',
+                'payment.totalPay',
+                'payment.method',
+                'payment.status',
+                'payment.reference',
+                'order.payReference'
+            )
+            ->orderByDesc('payment.id')
             ->get();
 
         // return dd($cashier, $cashierItems);
         return view('management/payment', ['payments' => $payments] );
+    }
+
+    public function detailPayment($id)
+    {
+        $payment = DB::table('payment')
+            ->leftJoin('order', 'payment.order_id', '=', 'order.id')
+            ->leftJoin('users', 'order.user_id', '=', 'users.id')
+            ->where('payment.id', $id)
+            ->select(
+                'payment.id as payment_id',
+                'payment.order_id',
+                'payment.totalPay',
+                'payment.method',
+                'payment.status as payment_status',
+                'payment.reference',
+                'payment.created_at as paid_at',
+                'order.total as order_total',
+                'order.amountPaid',
+                'order.amountChange',
+                'order.customer',
+                'order.status as order_status',
+                'order.payment-status',
+                'order.payReference',
+                'users.name as cashier_name'
+            )
+            ->first();
+
+        if (! $payment) {
+            abort(404);
+        }
+
+        $trxRef = ($payment->reference && $payment->reference !== '-')
+            ? $payment->reference
+            : ($payment->payReference ?? '-');
+
+        $orderItems = DB::table('ordered_items')
+            ->where('ordered_items.order_id', $payment->order_id)
+            ->join('menus', 'ordered_items.menu_id', '=', 'menus.id')
+            ->select(
+                'ordered_items.id',
+                'menus.name as menu_name',
+                'menus.price as menu_price',
+                'ordered_items.quantity',
+                'ordered_items.variant',
+                'ordered_items.size',
+                'ordered_items.ice',
+                'ordered_items.sugar',
+                'ordered_items.subtotal',
+                'ordered_items.status'
+            )
+            ->get();
+
+        $itemsTotal = (int) $orderItems->sum('subtotal');
+        $orderTotal = (int) ($payment->order_total ?? $itemsTotal);
+        $amountPaid = (int) ($payment->amountPaid ?? $payment->totalPay ?? 0);
+        $change = (int) ($payment->amountChange ?? max(0, $amountPaid - $orderTotal));
+
+        return view('management/paymentDetail', [
+            'payment' => $payment,
+            'trxRef' => $trxRef,
+            'orderItems' => $orderItems,
+            'orderTotal' => $orderTotal,
+            'amountPaid' => $amountPaid,
+            'change' => $change,
+            'itemsTotal' => $itemsTotal,
+        ]);
     }
     
     // Menu management -------------------------------------------------

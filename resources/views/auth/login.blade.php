@@ -20,7 +20,7 @@
                                     <div class="row mb-3">
                                         <label for="email" class="fs-6 col-md-6 col-form-label">{{ __('Email Address') }}</label>
 
-                                        <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+                                        <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus placeholder="nama@email.com" aria-describedby="email-error">
         
                                         @error('email')
                                             <span class="invalid-feedback" role="alert">
@@ -32,7 +32,7 @@
                                     <div class="row mb-3">
                                         <label for="password" class="fs-6 col-md-6 col-form-label">{{ __('Password') }}</label>
 
-                                            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+                                            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" placeholder="••••••••" aria-describedby="password-error">
 
                                             @error('password')
                                                 <span class="invalid-feedback" role="alert">
@@ -52,8 +52,8 @@
                                     </div>
             
                                     <div class="row mb-0">
-                                            <button type="submit" class="btn btn-primary">
-                                                {{ __('Login') }}
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="bi bi-box-arrow-in-right me-1"></i>{{ __('Login') }}
                                             </button>
             
                                             @if (Route::has('password.request'))

@@ -64,6 +64,8 @@
 
     </div>
 
+    @include('partials.admin.menu-options-fields', ['category' => 'Coffee'])
+
     <div class="my-2">
       <label for="formFile" class="form-label">Upload image for the menu.</label>
       <input class="form-control" type="file" id="formFile" name="gambar">

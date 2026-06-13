@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Menu;
 use App\Models\cartItems;
+use App\Support\MenuOptions;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,10 +29,15 @@ class MenuController extends Controller
     {
 
         $menuItems = DB::table('menus')
-            ->select('id', 'name', 'description', 'category', 'price', 'most_ordered', 'img_url')
-            ->get();
+            ->select('id', 'name', 'description', 'category', 'price', 'most_ordered', 'img_url', 'options')
+            ->get()
+            ->map(function ($item) {
+                $item->option_config = MenuOptions::forMenu($item);
 
-        $groupedItems = collect($menuItems)->groupBy('category');
+                return $item;
+            });
+
+        $groupedItems = $menuItems->groupBy('category');
 
         $basketOwner = DB::table('carts')
             ->where('user_id', Auth::id())
@@ -39,15 +45,12 @@ class MenuController extends Controller
             ->first();
 
         if ($basketOwner == null) {
-            DB::table('carts')->insert(
-            array(
+            $cartId = DB::table('carts')->insertGetId([
                 'user_id' => Auth::id(),
                 'created_at' => now(),
                 'updated_at' => now(),
-            ));
-        
-        return redirect('home');
-        
+            ]);
+            $basketOwner = (object) ['id' => $cartId];
         }
             
         // $pass = collect($basketOwner);s
@@ -61,7 +64,12 @@ class MenuController extends Controller
         // $state = 'hello world';
 
         // return dd($basketOwner, $baskets);;
-        return view('home', ['baskets' => $baskets], compact('groupedItems'));
+        $cartCount = (int) $baskets->sum('quantity');
+
+        return view('home', [
+            'baskets' => $baskets,
+            'cartCount' => $cartCount,
+        ], compact('groupedItems'));
 
         // return dd($basketOwner, $baskets);;
     }
@@ -83,60 +91,77 @@ class MenuController extends Controller
         return redirect('home')->with('lastAct', 'Pesanan Dikurangi');
     }
 
-    public function store(Request $request, Menu $menu)
+    public function store(Request $request)
     {
-        // dd(cartItems::find($request->input("delete-target")));
-        
-        $anchor = array_values($request->all());
-        $anchor = $anchor[1];
+        $menuId = $request->input('menu_id');
+
+        if (! $menuId) {
+            foreach ($request->all() as $key => $value) {
+                if (str_starts_with($key, 'update_')) {
+                    $menuId = $value;
+                    break;
+                }
+            }
+        }
+
+        if (! $menuId) {
+            return redirect('home')->with('lastAct', 'Gagal menambahkan pesanan.');
+        }
+
+        $menu = DB::table('menus')->where('id', $menuId)->first();
+        if (! $menu) {
+            return redirect('home')->with('lastAct', 'Menu tidak ditemukan.');
+        }
+
+        $optionConfig = MenuOptions::forMenu($menu);
+        $selections = MenuOptions::selectionsFromRequest($optionConfig, $request, (int) $menuId);
+        $variant = $selections['variant'];
+        $size = $selections['size'];
+        $ice = $selections['ice'];
+        $sugar = $selections['sugar'];
 
         $basketOwner = DB::table('carts')
             ->where('user_id', Auth::id())
-            ->latest() // ambil yang paling baru
+            ->latest()
             ->first();
+
+        if (! $basketOwner) {
+            $cartId = DB::table('carts')->insertGetId([
+                'user_id' => Auth::id(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $basketOwner = (object) ['id' => $cartId];
+        }
 
         $cartItem = DB::table('cart_items')
             ->where('cart_id', $basketOwner->id)
-            ->where('menu_id', $request->input("update_" . $anchor))
-            ->where('variant', $request->input("variant-" . $anchor))
-            ->where('size', $request->input("size-" . $anchor))
-            ->where('ice', $request->input('ice-' . $anchor))
-            ->where('sugar', $request->input("sugar-" . $anchor))
+            ->where('menu_id', $menuId)
+            ->where('variant', $variant)
+            ->where('size', $size)
+            ->where('ice', $ice)
+            ->where('sugar', $sugar)
             ->first();
-
-
-
-        // return dd($cartItem, $request);
-        
 
         if ($cartItem) {
             DB::table('cart_items')
                 ->where('id', $cartItem->id)
                 ->increment('quantity');
-
-                $stone = DB::table('cart_items')
-                    ->where('menu_id', $request->input("update_" . $anchor))
-                    ->join('menus', 'menu_id', '=', 'menus.id')
-                    ->select('menus.price', 'quantity')
-                    ->get();
-
         } else {
             DB::table('cart_items')->insert([
-                'cart_id'  => $basketOwner->id,
-                'menu_id'  => $request->input("update_" . $anchor),
-                'variant'  => $request->input("variant-" . $anchor),
-                'size'     => $request->input("size-" . $anchor),
-                'ice'      => $request->input('ice-' . $anchor),
-                'sugar'    => $request->input("sugar-" . $anchor),
+                'cart_id' => $basketOwner->id,
+                'menu_id' => $menuId,
+                'variant' => $variant,
+                'size' => $size,
+                'ice' => $ice,
+                'sugar' => $sugar,
                 'quantity' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
-
-            
         }
-        
-        // return dd($cartItem, $request);
-            
-        return redirect('home')->with('lastAct', 'Pesanan Ditambahkan');
+
+        return redirect('home')->with('lastAct', 'Pesanan ditambahkan ke keranjang.');
     }
     
 }

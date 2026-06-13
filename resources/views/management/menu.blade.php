@@ -16,13 +16,15 @@
     </a>
     </div>
 
-    <table class="table table-striped">
+    <div class="table-responsive-wrap">
+    <table class="table table-striped table-hover align-middle mb-0">
   <thead class="table-dark">
     <tr>
       <th scope="col">Menu ID</th>
       <th scope="col">Name</th>
       <th scope="col">Description</th>
       <th scope="col">Category</th>
+      <th scope="col">Opsi Variant</th>
       <th scope="col">Most Ordered</th>
       <th scope="col">Image</th>
       <th scope="col">Manage</th>
@@ -35,7 +37,11 @@
       <td class="align-middle">{{ $item->name }}</td>
       <td class="align-middle">{{ $item->description }}</td>
       <td class="align-middle">{{ $item->category }}</td>
-      <td class="align-middle" style="align-middle">{{ $item->most_ordered }}</td>
+      <td class="align-middle">
+        @php $opts = \App\Support\MenuOptions::resolve($item->options ?? null, $item->category); @endphp
+        <span class="small">{{ implode(', ', $opts['variant']['options'] ?? []) }}</span>
+      </td>
+      <td class="align-middle">{{ $item->most_ordered ? 'Yes' : 'No' }}</td>
       <td class="align-middle"
       ><img class="image-fluid" style="max-width: 150px; max-height:250px;" src="
         ../{{ $item->img_url }}" alt="">
@@ -81,6 +87,7 @@
     @endforeach
   </tbody>
 </table>
+    </div>
 
 </main>
 @endsection

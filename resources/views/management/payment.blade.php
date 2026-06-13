@@ -36,15 +36,18 @@
     <tr>
       <th scope="row" class="align-middle">{{ $payment->id }}</th>
       <td class="align-middle">{{ $payment->order_id }}</td>
-      <td class="align-middle">{{ $payment->totalPay }}</td>
+      <td class="align-middle">Rp{{ number_format($payment->totalPay, 0, ',', '.') }}</td>
       <td class="align-middle">{{ $payment->method }}</td>
       <td class="align-middle">{{ $payment->status }}</td>
-      <td class="align-middle">{{ $payment->reference }}</td>
       <td class="align-middle">
-        <a href="/dashboard/payment/{{ $payment->id }}" class="text-white align-middle">
-            <button  class="btn btn-outline-secondary">
-                void
-            </button>
+        @php
+          $trxRef = ($payment->reference && $payment->reference !== '-') ? $payment->reference : ($payment->payReference ?? '-');
+        @endphp
+        <code class="small">{{ $trxRef }}</code>
+      </td>
+      <td class="align-middle">
+        <a href="{{ url('/dashboard/payment/'.$payment->id) }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-eye me-1"></i>Detail
         </a>
       </td>
     </tr>

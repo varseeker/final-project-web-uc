@@ -67,7 +67,7 @@ Route::middleware('role:admin')->group(function () {
     
     Route::get('/dashboard/payment/export/', [App\Http\Controllers\AdminController::class, 'exportPayment']);
     Route::get('/dashboard/payment', [App\Http\Controllers\AdminController::class, 'indexPayment']);
-    // Route::get('/dashboard/order/{id}', [App\Http\Controllers\AdminController::class, 'detailPayment']);
+    Route::get('/dashboard/payment/{id}', [App\Http\Controllers\AdminController::class, 'detailPayment']);
     
     
     // Route::get('/dashboard/crew', function () {
