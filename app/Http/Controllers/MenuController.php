@@ -88,10 +88,22 @@ class MenuController extends Controller
     }
 
     public function reduceItems(Request $request)
-    {   
-            DB::table('cart_items')
-                ->where('id', $request->input('update-target'))
-                ->decrement('quantity');
+    {
+        $cartItemId = (int) $request->input('update-target');
+
+        DB::table('cart_items')
+            ->where('id', $cartItemId)
+            ->decrement('quantity');
+
+        $item = DB::table('cart_items')
+            ->join('menus', 'cart_items.menu_id', '=', 'menus.id')
+            ->where('cart_items.id', $cartItemId)
+            ->select('cart_items.quantity', 'menus.price')
+            ->first();
+
+        if ($item) {
+            $this->refreshCartItemSubtotal($cartItemId, (int) $item->price);
+        }
 
         return redirect('home')->with('lastAct', 'Pesanan Dikurangi');
     }
@@ -152,8 +164,10 @@ class MenuController extends Controller
             DB::table('cart_items')
                 ->where('id', $cartItem->id)
                 ->increment('quantity');
+
+            $this->refreshCartItemSubtotal((int) $cartItem->id, (int) $menu->price);
         } else {
-            DB::table('cart_items')->insert([
+            $cartItemId = DB::table('cart_items')->insertGetId([
                 'cart_id' => $basketOwner->id,
                 'menu_id' => $menuId,
                 'variant' => $variant,
@@ -161,9 +175,12 @@ class MenuController extends Controller
                 'ice' => $ice,
                 'sugar' => $sugar,
                 'quantity' => 1,
+                'subtotal' => (int) $menu->price,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            $this->refreshCartItemSubtotal($cartItemId, (int) $menu->price);
         }
 
         return redirect('home')->with('lastAct', 'Pesanan ditambahkan ke keranjang.');
@@ -179,7 +196,18 @@ class MenuController extends Controller
 
         return $query;
     }
-    
+
+    private function refreshCartItemSubtotal(int $cartItemId, int $menuPrice): void
+    {
+        $quantity = (int) DB::table('cart_items')->where('id', $cartItemId)->value('quantity');
+
+        DB::table('cart_items')
+            ->where('id', $cartItemId)
+            ->update([
+                'subtotal' => max(0, $quantity) * $menuPrice,
+                'updated_at' => now(),
+            ]);
+    }
 }
 
 // cartItems
