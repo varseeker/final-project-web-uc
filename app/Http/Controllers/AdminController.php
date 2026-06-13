@@ -67,11 +67,9 @@ class AdminController extends Controller
         if ($request->hasFile('gambar') && $request->file('gambar')->isValid()) {
             
             $file = $request->file('gambar');
-            $path = 'img/menuImg/'. $file->getClientOriginalName();
-                    // return dd($request, $path);
-		    $file->move('img/menuImg',$file->getClientOriginalName());
-            
-            
+            $path = 'img/menuImg/'.$file->getClientOriginalName();
+            $file->move(public_path('img/menuImg'), $file->getClientOriginalName());
+
         Menu::where('id', $request->route('id'))
                         ->update(array_merge([
                             'name' => $request->name,
@@ -115,11 +113,9 @@ class AdminController extends Controller
         if ($request->hasFile('gambar') && $request->file('gambar')->isValid()) {
             
             $file = $request->file('gambar');
-            $path = 'img/menuImg/'. $file->getClientOriginalName();
-                    // return dd($request, $path);
-		    $file->move('img/menuImg',$file->getClientOriginalName());
-            
-            
+            $path = 'img/menuImg/'.$file->getClientOriginalName();
+            $file->move(public_path('img/menuImg'), $file->getClientOriginalName());
+
         Menu::create(array_merge([
                         'name' => $request->name,
                         'description' => $request->description,

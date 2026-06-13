@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('menus', function (Blueprint $table) {
-            $table->json('options')->nullable()->after('img_url');
+            $table->json('options')->nullable();
         });
 
         foreach (DB::table('menus')->orderBy('id')->get() as $menu) {
