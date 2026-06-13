@@ -21,7 +21,7 @@ class MenuController extends Controller
 
     public function index()
     {
-        $this->inventoryMenuSync->syncIfStale();
+        $this->inventoryMenuSync->ensureSynced();
 
         $menuCatalog = MenuCatalog::build(
             $this->visibleMenusQuery()
@@ -34,7 +34,7 @@ class MenuController extends Controller
 
     public function orderPage()
     {
-        $this->inventoryMenuSync->syncIfStale();
+        $this->inventoryMenuSync->ensureSynced();
 
         $menuCatalog = MenuCatalog::build(
             $this->visibleMenusQuery()

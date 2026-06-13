@@ -2,7 +2,6 @@
 
 namespace App\Services\Inventory;
 
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -38,6 +37,7 @@ class InventoryClient
         return Http::baseUrl(config('inventory.base_url'))
             ->withToken(config('inventory.api_token'))
             ->acceptJson()
-            ->timeout(15);
+            ->timeout((int) config('inventory.timeout_seconds', 30))
+            ->retry(2, 1000);
     }
 }

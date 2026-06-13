@@ -10,9 +10,35 @@ use Illuminate\Support\Facades\Log;
 
 class InventoryMenuSyncService
 {
+    private const CACHE_KEY = 'inventory.menu_sync.last_run';
+
     public function __construct(
         private InventoryClient $client,
     ) {}
+
+    /**
+     * Sinkronkan menu dari inventory jika belum ada di POS atau cache TTL habis.
+     */
+    public function ensureSynced(): bool
+    {
+        if (! $this->client->enabled()) {
+            return false;
+        }
+
+        if ($this->needsImmediateSync()) {
+            Cache::forget(self::CACHE_KEY);
+
+            $result = $this->sync();
+
+            if ($result) {
+                $this->markSyncRan();
+            }
+
+            return $result;
+        }
+
+        return $this->syncIfStale();
+    }
 
     public function syncIfStale(): bool
     {
@@ -21,16 +47,15 @@ class InventoryMenuSyncService
         }
 
         $ttl = config('inventory.sync_ttl_seconds', 120);
-        $cacheKey = 'inventory.menu_sync.last_run';
 
-        if (Cache::has($cacheKey)) {
+        if (Cache::has(self::CACHE_KEY)) {
             return false;
         }
 
         $result = $this->sync();
 
         if ($result) {
-            Cache::put($cacheKey, now()->timestamp, $ttl);
+            $this->markSyncRan($ttl);
         }
 
         return $result;
@@ -49,7 +74,14 @@ class InventoryMenuSyncService
         } catch (\Throwable $e) {
             Log::error('Inventory menu sync failed.', [
                 'message' => $e->getMessage(),
+                'base_url' => config('inventory.base_url'),
             ]);
+
+            return false;
+        }
+
+        if ($remoteMenus === []) {
+            Log::warning('Inventory menu sync returned empty menu list.');
 
             return false;
         }
@@ -84,8 +116,7 @@ class InventoryMenuSyncService
                 'most_ordered' => (bool) ($remote['most_ordered'] ?? $existing->most_ordered ?? false),
                 'img_url' => $imgUrl,
                 'options' => $options,
-                'is_active' => (bool) ($remote['is_active'] ?? true)
-                    && ((int) ($remote['available_servings'] ?? 0) > 0),
+                'is_active' => (bool) ($remote['is_active'] ?? true),
                 'inventory_synced_at' => $now,
                 'updated_at' => $now,
             ];
@@ -114,6 +145,32 @@ class InventoryMenuSyncService
         }
 
         return true;
+    }
+
+    private function needsImmediateSync(): bool
+    {
+        $visibleCount = DB::table('menus')
+            ->where('is_active', true)
+            ->whereNotNull('inventory_menu_code')
+            ->count();
+
+        if ($visibleCount === 0) {
+            return true;
+        }
+
+        return DB::table('menus')
+            ->whereNotNull('inventory_menu_code')
+            ->whereNull('inventory_synced_at')
+            ->exists();
+    }
+
+    private function markSyncRan(?int $ttl = null): void
+    {
+        Cache::put(
+            self::CACHE_KEY,
+            now()->timestamp,
+            $ttl ?? config('inventory.sync_ttl_seconds', 120)
+        );
     }
 
     private function resolveRemoteImage(array $remote): string

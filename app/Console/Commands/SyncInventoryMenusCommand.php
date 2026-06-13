@@ -15,9 +15,12 @@ class SyncInventoryMenusCommand extends Command
     {
         if ($this->option('force')) {
             cache()->forget('inventory.menu_sync.last_run');
+            $ok = $sync->sync();
+        } else {
+            $ok = $sync->ensureSynced();
         }
 
-        if ($sync->sync()) {
+        if ($ok) {
             $this->info('Menus synced from inventory service.');
 
             return self::SUCCESS;

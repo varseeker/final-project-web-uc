@@ -3,7 +3,11 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [App\Http\Controllers\MenuController::class, 'index']);
+Route::get('/', function () {
+    return Auth::check()
+        ? redirect()->route('home')
+        : redirect()->route('login');
+});
 
 Route::get('/media/menu/{v}/{src}', [App\Http\Controllers\MenuDisplayImageController::class, 'show'])
     ->where('src', '[A-Za-z0-9_-]+')

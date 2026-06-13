@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\Inventory\InventoryMenuSyncService;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,8 +15,9 @@ class LoginController extends Controller
 
     protected $redirectTo = '/home';
 
-    public function __construct()
-    {
+    public function __construct(
+        private InventoryMenuSyncService $inventoryMenuSync,
+    ) {
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
     }
@@ -40,5 +42,15 @@ class LoginController extends Controller
         }
 
         return true;
+    }
+
+    protected function authenticated(Request $request, $user)
+    {
+        $this->inventoryMenuSync->ensureSynced();
+    }
+
+    protected function loggedOut(Request $request)
+    {
+        return redirect()->route('login');
     }
 }

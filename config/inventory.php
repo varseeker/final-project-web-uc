@@ -16,4 +16,6 @@ return [
 
     'order_id_prefix' => env('INVENTORY_ORDER_ID_PREFIX', 'pos-warkop-kayu'),
 
+    'timeout_seconds' => (int) env('INVENTORY_TIMEOUT_SECONDS', 30),
+
 ];

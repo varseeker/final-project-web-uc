@@ -22,6 +22,7 @@ fi
 
 php artisan config:clear
 php artisan migrate --force
+php artisan inventory:sync-menus --force || echo "WARNING: Menu sync gagal — cek INVENTORY_SERVICE_URL dan INVENTORY_API_TOKEN."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache

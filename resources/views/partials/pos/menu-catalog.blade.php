@@ -37,7 +37,14 @@
 @if(($catalog['total'] ?? 0) === 0)
     <div class="empty-state">
         <i class="bi bi-cup-hot"></i>
-        <p class="fw-semibold mb-0">Belum ada menu tersedia</p>
+        <p class="fw-semibold mb-1">Belum ada menu tersedia</p>
+        <p class="text-muted small mb-0">
+            @if(config('inventory.enabled'))
+                Pastikan menu aktif di Inventory Management dan env <code>INVENTORY_SERVICE_URL</code> / <code>INVENTORY_API_TOKEN</code> sudah benar, lalu refresh halaman.
+            @else
+                Integrasi inventory belum aktif. Set <code>INVENTORY_SERVICE_ENABLED=true</code> di environment POS.
+            @endif
+        </p>
     </div>
 @else
     @foreach ($segmentOrder as $segmentKey)

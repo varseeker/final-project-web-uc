@@ -12,7 +12,8 @@
                   </div>
                   <div class="col-md-6 flex row align-items-center">
                     <div class="card-body col ">
-                    <div class="fs-4 text-md-center">{{ __('Welcome back!') }}</div>
+                    <div class="fs-4 text-md-center">{{ __('Login Kasir POS') }}</div>
+                    <p class="text-muted small text-center mb-0 px-2">Gunakan akun <strong>staf</strong> dari Inventory Management System.</p>
                         <div class="px-3 mt-2">
                             <div class="card-body"  data-bs-theme="light">
                                 <form method="POST" action="{{ route('login') }}">
