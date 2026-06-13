@@ -1,7 +1,7 @@
 <?php
 
+use App\Support\SafeMigration;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -11,8 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('users');
+        SafeMigration::dropLegacyPosAuthTables();
     }
 
     public function down(): void
