@@ -8,7 +8,7 @@
                 <div class="row g-0">
                     
                   <div class="col-md-6">
-                    <img src="{{asset('img/side-img.png')}}" class="img-fluid rounded-start rounded-start-login-image" alt="...">
+                    <img src="{{ asset('img/side-img.png') }}" class="img-fluid rounded-start rounded-start-login-image" alt="Ilustrasi Warkop Kayu">
                   </div>
 
                   <div class="col-md-6 row align-items-center">

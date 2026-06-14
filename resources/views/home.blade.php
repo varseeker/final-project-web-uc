@@ -203,7 +203,7 @@ data-cart-count="{{ $cartItemCount }}"
         <h5 class="modal-title">Pembayaran Qris</h5>
       </div>
       <div class="modal-body text-center">
-        <img src="/images/dummy-qr.png" alt="QRIS" class="img-fluid mb-3" width="200">
+        <img src="{{ asset('img/dummy-qr.svg') }}" alt="QRIS" class="img-fluid mb-3" width="200">
         <p>Total yang harus dibayar:</p>
         <h4 class="fw-bold text-primary" id="qrisTotalDisplay">Rp 0</h4>
         <button class="btn btn-dark w-100 mt-3" onclick="handleQrisSubmit()">Submit & Cetak Struk</button>
@@ -213,6 +213,5 @@ data-cart-count="{{ $cartItemCount }}"
 </div>
 
 <div id="decor-backdrop" class="modal-backdrop fade show" style="display: none"></div>
-<script src="../js/update-btn.js"></script>
 
 @endsection

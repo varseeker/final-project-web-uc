@@ -1,6 +1,18 @@
 # Render Blueprint — POS Warkop Kayu
-# Database: pakai PostgreSQL yang SAMA dengan warkop-inventory (warkop-db).
-# Set DATABASE_URL / DB_URL ke connection string database warkop-db di Render Dashboard.
+#
+# PRASYARAT: Deploy inventory-system dulu (warkop-inventory + warkop-db).
+#
+# SETEL MANUAL di Render Dashboard (Environment → pos-warkop-kayu):
+#   APP_KEY              → php artisan key:generate --show (unik, format base64:...)
+#   APP_URL              → https://pos-warkop-kayu.onrender.com
+#   DATABASE_URL         → External Database URL dari PostgreSQL warkop-db (sama dengan inventory)
+#   DB_URL               → sama dengan DATABASE_URL
+#   INVENTORY_SERVICE_URL→ https://warkop-inventory.onrender.com
+#   INVENTORY_API_TOKEN  → token rahasia (HARUS SAMA dengan warkop-inventory)
+#   MIDTRANS_SERVER_KEY  → dari dashboard Midtrans
+#   MIDTRANS_CLIENT_KEY  → dari dashboard Midtrans
+#
+# Lihat DEPLOY.md untuk checklist lengkap dan verifikasi koneksi.
 
 services:
   - type: web
@@ -53,6 +65,8 @@ services:
         value: pos-warkop-kayu
       - key: INVENTORY_ORDER_ID_PREFIX
         value: pos-warkop-kayu
+      - key: INVENTORY_TIMEOUT_SECONDS
+        value: "30"
       - key: INVENTORY_SERVICE_URL
         sync: false
       - key: INVENTORY_API_TOKEN
