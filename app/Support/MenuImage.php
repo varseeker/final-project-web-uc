@@ -23,24 +23,50 @@ class MenuImage
     public static function resolve(object $menu): string
     {
         $stored = trim((string) ($menu->img_url ?? ''));
-        $fromInventory = MenuAsset::isInventoryManaged($menu);
 
-        if ($stored !== '' && self::isRemoteUrl($stored)) {
-            return MenuAsset::normalizeInventoryUrl($stored) ?? $stored;
+        if ($stored !== '') {
+            $inventoryUrl = self::normalizeStoredInventoryImage($stored);
+
+            if ($inventoryUrl) {
+                return $inventoryUrl;
+            }
+
+            if (! self::isGenericPlaceholder($stored)) {
+                return MenuAsset::url($stored);
+            }
         }
 
-        if ($fromInventory) {
-            return 'img/item_placeholder.png';
+        return self::defaultImage($menu);
+    }
+
+    public static function resolveFromRemote(
+        ?string $code,
+        ?string $name,
+        ?string $category = null,
+        ?string $imageUrl = null,
+    ): string {
+        if ($imageUrl) {
+            $normalized = self::normalizeStoredInventoryImage($imageUrl);
+
+            if ($normalized) {
+                return $normalized;
+            }
         }
 
+        return self::defaultImage((object) [
+            'inventory_menu_code' => $code,
+            'name' => $name,
+            'category' => $category,
+            'description' => '',
+        ]);
+    }
+
+    public static function defaultImage(object $menu): string
+    {
         $code = (string) ($menu->inventory_menu_code ?? '');
 
         if ($code !== '' && isset(self::BY_CODE[$code])) {
             return self::BY_CODE[$code];
-        }
-
-        if ($stored !== '' && ! self::isGenericPlaceholder($stored)) {
-            return $stored;
         }
 
         return self::guessFromName(
@@ -49,9 +75,17 @@ class MenuImage
         );
     }
 
-    public static function resolveFromRemote(?string $code, ?string $name, ?string $category = null): string
+    private static function normalizeStoredInventoryImage(string $stored): ?string
     {
-        return 'img/item_placeholder.png';
+        if (str_starts_with($stored, '/menus/images/')) {
+            return MenuAsset::normalizeInventoryUrl($stored);
+        }
+
+        if (self::isRemoteUrl($stored)) {
+            return MenuAsset::normalizeInventoryUrl($stored) ?? $stored;
+        }
+
+        return null;
     }
 
     private static function isRemoteUrl(string $path): bool

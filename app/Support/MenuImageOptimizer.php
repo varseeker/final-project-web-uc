@@ -20,7 +20,7 @@ class MenuImageOptimizer
 
         $source = MenuAsset::normalizeInventoryUrl($source) ?? $source;
 
-        if (self::shouldServeDirectly($source)) {
+        if (self::shouldServeDirectly($source) || self::isInventoryRemoteUrl($source)) {
             return MenuAsset::url($source);
         }
 
@@ -79,6 +79,22 @@ class MenuImageOptimizer
         return str_ends_with($lower, '.svg')
             || str_contains($lower, 'item_placeholder')
             || str_contains($lower, 'menu_placeholder');
+    }
+
+    private static function isInventoryRemoteUrl(string $source): bool
+    {
+        if (! str_starts_with($source, 'http://') && ! str_starts_with($source, 'https://')) {
+            return false;
+        }
+
+        $sourceHost = strtolower((string) parse_url($source, PHP_URL_HOST));
+        $inventoryHost = strtolower((string) parse_url((string) config('inventory.base_url'), PHP_URL_HOST));
+
+        if ($sourceHost === '' || $inventoryHost === '') {
+            return false;
+        }
+
+        return $sourceHost === $inventoryHost;
     }
 
     private static function assertVariant(string $variant): void

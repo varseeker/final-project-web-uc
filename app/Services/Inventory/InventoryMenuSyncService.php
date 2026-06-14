@@ -2,7 +2,7 @@
 
 namespace App\Services\Inventory;
 
-use App\Support\MenuAsset;
+use App\Support\MenuImage;
 use App\Support\MenuOptions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -175,13 +175,12 @@ class InventoryMenuSyncService
 
     private function resolveRemoteImage(array $remote): string
     {
-        $remoteUrl = MenuAsset::normalizeInventoryUrl($remote['image_url'] ?? null);
-
-        if ($remoteUrl) {
-            return $remoteUrl;
-        }
-
-        return 'img/item_placeholder.png';
+        return MenuImage::resolveFromRemote(
+            code: isset($remote['code']) ? (string) $remote['code'] : null,
+            name: isset($remote['name']) ? (string) $remote['name'] : null,
+            category: isset($remote['category']) ? (string) $remote['category'] : null,
+            imageUrl: isset($remote['image_url']) ? (string) $remote['image_url'] : null,
+        );
     }
 
     private function normalizeCategory(string $category): string

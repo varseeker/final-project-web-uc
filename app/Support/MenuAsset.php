@@ -24,6 +24,17 @@ class MenuAsset
         }
 
         $url = trim($url);
+
+        if ($url === '') {
+            return null;
+        }
+
+        if (str_starts_with($url, '/menus/images/')) {
+            $baseUrl = rtrim((string) config('inventory.base_url'), '/');
+
+            return $baseUrl === '' ? $url : $baseUrl.$url;
+        }
+
         $path = parse_url($url, PHP_URL_PATH);
 
         if (! is_string($path) || ! str_starts_with($path, '/menus/images/')) {

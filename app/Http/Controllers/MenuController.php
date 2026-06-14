@@ -25,7 +25,7 @@ class MenuController extends Controller
 
         $menuCatalog = MenuCatalog::build(
             $this->visibleMenusQuery()
-                ->select('name', 'description', 'category', 'price', 'most_ordered', 'img_url')
+                ->select('name', 'description', 'category', 'price', 'most_ordered', 'img_url', 'inventory_menu_code')
                 ->get()
         );
 
@@ -38,7 +38,7 @@ class MenuController extends Controller
 
         $menuCatalog = MenuCatalog::build(
             $this->visibleMenusQuery()
-                ->select('id', 'name', 'description', 'category', 'price', 'most_ordered', 'img_url', 'options')
+                ->select('id', 'name', 'description', 'category', 'price', 'most_ordered', 'img_url', 'inventory_menu_code', 'options')
                 ->get(),
             withOptions: true
         );
