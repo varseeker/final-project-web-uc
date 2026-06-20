@@ -17,7 +17,6 @@
     @stack('head')
 </head>
 <body class="bg-light pos-app" @stack('body-attrs')>
-    @include('layouts.partials.loading')
     <a href="#main-content" class="skip-link">Lewati ke konten</a>
     @include('layouts.navbar')
     <main id="main-content" class="pos-main py-4">
@@ -26,6 +25,7 @@
     <div class="pos-footer-wrap">
         @include('layouts.footer')
     </div>
+    @include('layouts.partials.loading')
     @stack('scripts')
 </body>
 </html>

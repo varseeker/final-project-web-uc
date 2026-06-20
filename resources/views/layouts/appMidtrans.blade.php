@@ -16,7 +16,6 @@
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
 </head>
 <body class="bg-light pos-app">
-    @include('layouts.partials.loading')
     <a href="#main-content" class="skip-link">Lewati ke konten</a>
     @include('layouts.navbar')
     <main id="main-content" class="pos-main py-4">
@@ -26,6 +25,7 @@
         @include('layouts.footer')
     </div>
     <script src="{{ config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
+    @include('layouts.partials.loading')
     @stack('scripts')
 </body>
 </html>

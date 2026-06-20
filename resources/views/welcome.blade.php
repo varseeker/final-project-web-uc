@@ -15,7 +15,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </head>
 <body class="bg-light pos-app">
-    @include('layouts.partials.loading')
     <a href="#main-content" class="skip-link">Lewati ke konten</a>
     @include('layouts.navbar')
 
@@ -31,5 +30,6 @@
     <div class="pos-footer-wrap">
         @include('layouts.footer')
     </div>
+    @include('layouts.partials.loading')
 </body>
 </html>
