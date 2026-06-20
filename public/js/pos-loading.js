@@ -14,9 +14,18 @@
             bar = root ? root.querySelector('.pos-loading__bar') : null;
             label = root ? root.querySelector('.pos-loading__label') : null;
             mainContent = document.getElementById('main-content');
+            mountRoot();
         }
 
         return root;
+    }
+
+    function mountRoot() {
+        if (!root || root.parentNode === document.body) {
+            return;
+        }
+
+        document.body.appendChild(root);
     }
 
     function setMessage(message) {
@@ -84,6 +93,7 @@
 
         el.hidden = true;
         el.setAttribute('aria-hidden', 'true');
+        el.setAttribute('aria-busy', 'false');
         bar.classList.remove('is-complete', 'is-active');
     }
 
@@ -105,6 +115,7 @@
         setMessage(message || 'Memproses...');
         el.hidden = false;
         el.setAttribute('aria-hidden', 'false');
+        el.setAttribute('aria-busy', 'true');
         bar.classList.remove('is-complete');
         bar.classList.add('is-active');
     }

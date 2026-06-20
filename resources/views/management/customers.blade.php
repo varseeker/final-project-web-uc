@@ -7,7 +7,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h1 class="h3 fw-bold mb-1">Customer Management</h1>
-            <p class="text-muted small mb-0">Data member dan loyalty point (10% dari setiap pembelian)</p>
+            <p class="text-muted small mb-0">Data member dan loyalty point (1% dari setiap pembelian)</p>
         </div>
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMemberModal">
             <i class="bi bi-person-plus"></i> Tambah Member

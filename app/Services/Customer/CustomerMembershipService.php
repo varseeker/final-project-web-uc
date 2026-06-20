@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class CustomerMembershipService
 {
+    private const LOYALTY_RATE = 0.01;
     public function findByPhone(?string $phone): ?Customer
     {
         $normalized = CustomerPhone::normalize($phone);
@@ -50,7 +51,7 @@ class CustomerMembershipService
             return 0;
         }
 
-        return (int) floor($orderTotal * 0.10);
+        return (int) floor($orderTotal * self::LOYALTY_RATE);
     }
 
     public function awardPointsForOrder(int|string $orderId): int
