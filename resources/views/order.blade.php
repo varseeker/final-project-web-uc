@@ -97,9 +97,12 @@
         <button class="btn btn-outline-success btn-payment btn-tunai w-100 my-4 me-2 col btn-lg" data-bs-target="#cashPaymentModal" data-bs-toggle="modal"> 
           <i class="bi bi-cash-stack me-2"></i> Cash
         </button>
-        <button class="btn btn-outline-info btn-payment btn-qris w-100  my-4 col  btn-lg" id="pay-button">
+        <button class="btn btn-outline-info btn-payment btn-qris w-100  my-4 col  btn-lg" id="pay-button" @if(empty($snapToken)) disabled @endif>
           <i class="bi bi-qr-code-scan me-2"></i> Qris
         </button>
+        @if(empty($snapToken))
+          <p class="small text-danger mb-0">Pembayaran QRIS tidak tersedia. Gunakan tunai atau hubungi admin.</p>
+        @endif
       </div>
     </div>
   </div>
@@ -147,48 +150,55 @@
 <!-- <div id="decor-backdrop" class="modal-backdrop fade show" style="display: none"></div> -->
 
 <script>
-      document.getElementById('pay-button').onclick = function() {
-              snap.pay('{{ $snapToken }}', {
-                  onSuccess: function(result) {
-                      const form = document.createElement('form');
-                      form.method = 'POST';
-                      form.action = "{{ $successUrl }}";
+      const snapToken = @json($snapToken ?? '');
 
-                      const csrf = document.createElement('input');
-                      csrf.type = 'hidden';
-                      csrf.name = '_token';
-                      csrf.value = '{{ csrf_token() }}';
-                      form.appendChild(csrf);
+      document.getElementById('pay-button')?.addEventListener('click', function () {
+          if (!snapToken) {
+              alert('Pembayaran QRIS belum siap. Silakan gunakan pembayaran tunai.');
+              return;
+          }
 
-                      const cartToDelete = document.createElement('input');
-                      cartToDelete.type = 'hidden';
-                      cartToDelete.name = 'cartToDelete';
-                      cartToDelete.value = '{{ $orderTarget }}';
-                      form.appendChild(cartToDelete);
+          snap.pay(snapToken, {
+              onSuccess: function(result) {
+                  const form = document.createElement('form');
+                  form.method = 'POST';
+                  form.action = "{{ $successUrl }}";
 
-                      const orderIdInput = document.createElement('input');
-                      orderIdInput.type = 'hidden';
-                      orderIdInput.name = 'order_id';
-                      orderIdInput.value = result.order_id || result.transaction_id || '-';
-                      form.appendChild(orderIdInput);
+                  const csrf = document.createElement('input');
+                  csrf.type = 'hidden';
+                  csrf.name = '_token';
+                  csrf.value = '{{ csrf_token() }}';
+                  form.appendChild(csrf);
 
-                      const customerName = document.createElement('input');
-                      customerName.type = 'hidden';
-                      customerName.name = 'customerName';
-                      customerName.value = @json($csName);
-                      form.appendChild(customerName);
+                  const cartToDelete = document.createElement('input');
+                  cartToDelete.type = 'hidden';
+                  cartToDelete.name = 'cartToDelete';
+                  cartToDelete.value = '{{ $orderTarget }}';
+                  form.appendChild(cartToDelete);
 
-                      document.body.appendChild(form);
-                      form.submit();
-                  },
-                  onPending: function(result) {
-                      // Tangani jika pembayaran pending
-                  },
-                  onError: function(result) {
-                      // Tangani jika pembayaran gagal
-                  }
-              });
-          };
+                  const orderIdInput = document.createElement('input');
+                  orderIdInput.type = 'hidden';
+                  orderIdInput.name = 'order_id';
+                  orderIdInput.value = result.order_id || result.transaction_id || '-';
+                  form.appendChild(orderIdInput);
+
+                  const customerName = document.createElement('input');
+                  customerName.type = 'hidden';
+                  customerName.name = 'customerName';
+                  customerName.value = @json($csName);
+                  form.appendChild(customerName);
+
+                  document.body.appendChild(form);
+                  form.submit();
+              },
+              onPending: function(result) {
+                  alert('Pembayaran masih pending. Silakan selesaikan di aplikasi bank/e-wallet.');
+              },
+              onError: function(result) {
+                  alert('Pembayaran gagal atau dibatalkan. Anda masih bisa membayar tunai.');
+              }
+          });
+      });
 
     document.addEventListener('DOMContentLoaded', function () {
         const tombolBayar = document.getElementById('tombolBayar');

@@ -76,6 +76,8 @@ services:
       - key: APP_URL
         sync: false
       - key: MIDTRANS_SERVER_KEY
-        sync: false
+        value: SB-Mid-server-t8MFom-L-ZMiJYA0lPvUX8hc
       - key: MIDTRANS_CLIENT_KEY
-        sync: false
+        value: SB-Mid-client-07PMj5xBlweORohB
+      - key: MIDTRANS_IS_PRODUCTION
+        value: "false"

@@ -3,42 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Services\Inventory\InventoryOrderPushService;
+use App\Services\Midtrans\SnapTokenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Dompdf\Dompdf;
-use Dompdf\Options;
-use Midtrans\Config;
-use Midtrans\Snap;
-use Exception;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct(
         private InventoryOrderPushService $inventoryOrderPush,
+        private SnapTokenService $snapTokenService,
     ) {
         $this->middleware('auth');
-        Config::$serverKey = config('midtrans.server_key');
-        Config::$isProduction = config('midtrans.is_production');
-        Config::$isSanitized = config('midtrans.is_sanitized');
-        Config::$is3ds = config('midtrans.is_3ds');
     }
 
-    /**
-     * Show the application dashboard.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
-     */
     public function index()
     {
         return view('home');
     }
-    
+
     public function reciept(Request $request)
     {
         $orderId = $request->input('cartToDelete');
@@ -51,6 +35,10 @@ class HomeController extends Controller
         $total = (int) $this->getOrderItems($orderId)->sum('subtotal');
         $pay = (int) preg_replace('/\D/', '', (string) $request->input('cashAmount', 0));
         $change = max(0, $pay - $total);
+
+        if ($pay < $total) {
+            return redirect('home')->with('lastAct', 'Nominal tunai kurang dari total tagihan.');
+        }
 
         $cashReference = $this->generateCashTransactionReference();
 
@@ -76,114 +64,125 @@ class HomeController extends Controller
 
     public function orderPage(Request $request)
     {
+        $request->validate([
+            'customerName' => ['required', 'string', 'max:120'],
+        ]);
 
-        date_default_timezone_set("Asia/Jakarta"); 
-        date("Y/m/d - h:s:i");
-
-        $isRefresh = DB::table('order')
-            ->where('user_id', Auth::id())
-            ->where('payment-status', 'pending')
-            ->latest() // ambil yang paling baru
-            ->first();
+        $csName = trim((string) $request->input('customerName'));
 
         $basketOwner = DB::table('carts')
             ->where('user_id', Auth::id())
-            ->latest() // ambil yang paling baru
+            ->latest()
             ->first();
 
-            
-        // $baskets = DB::table('cart_items')
-        //     ->where('cart_id', $basketOwner->id)
-        //     ->join('menus', 'menu_id', '=', 'menus.id')
-        //     ->select('cart_items.id', 'cart_id', 'menu_id', 'menus.name', 'menus.description', 'menus.price', 'quantity', 'variant', 'size', 'ice', 'sugar', 'subtotal')
-        //     ->get();
+        if (! $basketOwner) {
+            return redirect('home')->with('lastAct', 'Keranjang kosong. Tambahkan menu terlebih dahulu.');
+        }
 
         $baskets = DB::table('cart_items')
             ->where('cart_id', $basketOwner->id)
             ->join('menus', 'menu_id', '=', 'menus.id')
-            ->select('cart_items.id', 'cart_id', 'menu_id', 'menus.name', 'menus.description', 'menus.price', 'quantity', 'variant', 'size', 'ice', 'sugar', 'subtotal')
+            ->select(
+                'cart_items.id',
+                'cart_id',
+                'menu_id',
+                'menus.name',
+                'menus.description',
+                'menus.price',
+                'quantity',
+                'variant',
+                'size',
+                'ice',
+                'sugar',
+                'subtotal'
+            )
             ->get();
 
-        $csName = $request->customerName;
-        
-        $total = 0;
-        $wallet = $baskets->map(function ($item) use (&$total) {
-            $item->subtotal = $item->price * $item->quantity;
-
-            // total semua item di keranjang
-            $total += $item->subtotal;
-        });
-        
-        
-
-        if ($isRefresh == null) {
-            // return dd($total, $baskets);
-            // id	total	customer	status	payment-status	user_id
-            $orderId = DB::table('order')->insertGetId([
-                                'total'  => $total,
-                                'customer'  => $csName,
-                                'status'  => 'waiting-payment',
-                                'payment-status' => 'pending',
-                                'user_id' => Auth::id(),
-                            ]);
-            
-            // return dd( $orderId );
-            // session()->flash('cartToDelete', $orderId);
-                            
-            foreach ($baskets as $basket) {     
-                DB::table('ordered_items')->insert([
-                        'order_id'  => $orderId,
-                        'menu_id'  => $basket->menu_id,
-                        'user_id'  => Auth::id(),
-                        'quantity'  => $basket->quantity,
-                        'variant'  => $basket->variant,
-                        'size'  => $basket->size,
-                        'ice'  => $basket->ice,
-                        'sugar'  => $basket->sugar,
-                        'subtotal'  => $basket->subtotal,
-                        'status'     => 'waiting-payment',
-                    ]);
-            }      
+        if ($baskets->isEmpty()) {
+            return redirect('home')->with('lastAct', 'Keranjang kosong. Tambahkan menu terlebih dahulu.');
         }
 
-        $params = [
-            'transaction_details' => [
-                'order_id' => 'KAYU-TRXMIDTRANS-'.rand().'-'.date("Ymd"),
-                'gross_amount' => $total,
-            ]
-            // 'customer_details' => [
-            //     'first_name' => $request->first_name,
-            //     'last_name' => $request->last_name,
-            //     'email' => $request->email,
-            //     'phone' => $request->phone,
-            // ],
-        ];
+        $total = 0;
+        foreach ($baskets as $item) {
+            $item->subtotal = (int) ($item->subtotal ?? ($item->price * $item->quantity));
+            $total += $item->subtotal;
+        }
 
-        $snapToken = Snap::getSnapToken($params);
-        
-        // return dd( $snapToken );
-        // return response()->json($snapToken);
-        $orderTarget = DB::table('order')
-            ->where('status', 'waiting-payment')
-            ->where('payment-status', 'pending')
+        if ($total <= 0) {
+            return redirect('home')->with('lastAct', 'Total pesanan tidak valid.');
+        }
+
+        $pendingOrder = DB::table('order')
             ->where('user_id', Auth::id())
-            ->latest() // ambil yang paling baru
+            ->where('payment-status', 'pending')
+            ->latest()
             ->first();
 
-        $orderTarget = $orderTarget->id;    
-        
-        // $money = DB::table('order')
-        //     ->where('id', $orderTarget)
-        //     ->select('total')
-        //     ->get();
+        if ($pendingOrder) {
+            $orderId = (int) $pendingOrder->id;
 
-        // return dd($money[0]->total);
-        // return dd($orderTarget);
-        
-        // return dd("total belanja ".$total, "Item yg dibeli ".$baskets, "Nama pelanggan ".$csName, "Token ".$snapToken);
-        
+            DB::table('order')->where('id', $orderId)->update([
+                'total' => $total,
+                'customer' => $csName,
+                'updated_at' => now(),
+            ]);
 
-        return view('order', ['baskets' => $baskets])->with('csName', $csName)->with('snapToken', $snapToken)->with('successUrl', route('payment-success'))->with('orderTarget', $orderTarget);
+            DB::table('ordered_items')->where('order_id', $orderId)->delete();
+        } else {
+            $orderId = (int) DB::table('order')->insertGetId([
+                'total' => $total,
+                'customer' => $csName,
+                'status' => 'waiting-payment',
+                'payment-status' => 'pending',
+                'user_id' => Auth::id(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        foreach ($baskets as $basket) {
+            DB::table('ordered_items')->insert([
+                'order_id' => $orderId,
+                'menu_id' => $basket->menu_id,
+                'user_id' => Auth::id(),
+                'quantity' => $basket->quantity,
+                'variant' => $basket->variant ?? '-',
+                'size' => $basket->size ?? '-',
+                'ice' => $basket->ice ?? '-',
+                'sugar' => $basket->sugar ?? '-',
+                'subtotal' => $basket->subtotal,
+                'status' => 'waiting-payment',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        if (! $this->snapTokenService->configured()) {
+            Log::error('Midtrans is not configured.');
+
+            return redirect('home')->with(
+                'lastAct',
+                'Pembayaran Midtrans belum dikonfigurasi. Set MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di environment.'
+            );
+        }
+
+        try {
+            $snapToken = $this->snapTokenService->create($orderId, $total, $baskets, $csName);
+        } catch (\Throwable $e) {
+            return redirect('home')->with(
+                'lastAct',
+                'Gagal membuat sesi pembayaran Midtrans. Coba lagi atau gunakan pembayaran tunai.'
+            );
+        }
+
+        return view('order', [
+            'baskets' => $baskets,
+            'csName' => $csName,
+            'snapToken' => $snapToken,
+            'successUrl' => route('payment-success'),
+            'orderTarget' => $orderId,
+            'total' => $total,
+        ]);
     }
 
     public function paymentSuccess(Request $request)
@@ -315,7 +314,7 @@ class HomeController extends Controller
 
     private function generateCashTransactionReference(): string
     {
-        return 'KAYU-TRXCASH-'.rand().'-'.date('Ymd');
+        return 'KAYU-TRXCASH-'.random_int(100000, 999999).'-'.date('Ymd');
     }
 
     private function receiptView(
