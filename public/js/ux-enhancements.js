@@ -159,7 +159,7 @@
             toggler.setAttribute('aria-label', 'Buka menu');
         });
 
-        collapseEl.querySelectorAll('.pos-navbar__link[href]').forEach(function (link) {
+        collapseEl.querySelectorAll('.nav-link[href]').forEach(function (link) {
             link.addEventListener('click', function () {
                 if (window.innerWidth >= 992) return;
                 var instance = bootstrap.Collapse.getInstance(collapseEl);
