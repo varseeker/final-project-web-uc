@@ -24,6 +24,7 @@
                 if (!btn || btn.classList.contains('no-loading')) return;
                 btn.classList.add('is-loading');
                 btn.setAttribute('aria-busy', 'true');
+                btn.disabled = true;
             });
         });
     }
@@ -31,7 +32,7 @@
     function initCustomerNameValidation() {
         var input = document.querySelector('input[name="customerName"]');
         var form = input && input.closest('form');
-        if (!form) return;
+        if (!form || form.classList.contains('pos-checkout-form')) return;
 
         form.addEventListener('submit', function (e) {
             if (input.value.trim()) return;
@@ -158,7 +159,7 @@
             toggler.setAttribute('aria-label', 'Buka menu');
         });
 
-        collapseEl.querySelectorAll('.nav-link[href]').forEach(function (link) {
+        collapseEl.querySelectorAll('.pos-navbar__link[href]').forEach(function (link) {
             link.addEventListener('click', function () {
                 if (window.innerWidth >= 992) return;
                 var instance = bootstrap.Collapse.getInstance(collapseEl);

@@ -24,4 +24,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/home/order', [App\Http\Controllers\HomeController::class, 'orderPage']);
     Route::post('/home/order/payment-success', [App\Http\Controllers\HomeController::class, 'paymentSuccess'])->name('payment-success');
     Route::post('/print', [App\Http\Controllers\HomeController::class, 'reciept'])->name('reciept');
+
+    Route::get('/customers', [App\Http\Controllers\CustomerController::class, 'index'])->name('customers.index');
+    Route::post('/customers', [App\Http\Controllers\CustomerController::class, 'store'])->name('customers.store');
+    Route::post('/customers/lookup', [App\Http\Controllers\CustomerController::class, 'lookup'])->name('customers.lookup');
 });

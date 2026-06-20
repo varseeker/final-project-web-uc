@@ -210,6 +210,9 @@
         <strong>Tanggal</strong> {{ $orderAt }}<br>
         <strong>No. Order</strong> #{{ str_pad($orderId, 6, '0', STR_PAD_LEFT) }}<br>
         <strong>Pelanggan</strong> {{ $csName }}<br>
+        @if(!empty($memberPhone))
+          <strong>Member</strong> {{ $memberPhone }}<br>
+        @endif
         <strong>Metode</strong> {{ $paymentMethod }}
         @if(!empty($payReference) && $payReference !== '-')
           <br><strong>Ref. Bayar</strong> {{ $payReference }}
@@ -275,6 +278,18 @@
           <td>TOTAL</td>
           <td class="value">Rp{{ number_format($total, 0, ',', '.') }}</td>
         </tr>
+        @if(!empty($loyaltyEarned))
+        <tr>
+          <td class="label">Poin didapat</td>
+          <td class="value">+{{ number_format($loyaltyEarned, 0, ',', '.') }}</td>
+        </tr>
+        @endif
+        @if(!empty($memberTotalPoints))
+        <tr>
+          <td class="label">Total poin member</td>
+          <td class="value">{{ number_format($memberTotalPoints, 0, ',', '.') }}</td>
+        </tr>
+        @endif
       </table>
 
       <p class="receipt__thanks">Terima kasih — silakan datang kembali!</p>

@@ -13,6 +13,12 @@
               <div class="modal-header d-flex justify-content-between align-items-start border-0">
 
                   <h2 class="modal-title fw-bold">{{$csName}}'s Order</h2>
+                  @if(!empty($memberCustomer))
+                    <p class="small text-muted mb-0 mt-1">
+                      Member · {{ \App\Support\CustomerPhone::display($memberCustomer->phone) }}
+                      · {{ number_format($memberCustomer->loyalty_points, 0, ',', '.') }} poin
+                    </p>
+                  @endif
 
               </div>
                 <hr>
@@ -186,21 +192,45 @@
             return;
         }
 
+        if (window.PosLoading) {
+            window.PosLoading.start('Membuka pembayaran Midtrans...');
+        }
+
         window.snap.pay(snapToken, {
-            onSuccess: submitPaymentSuccess,
+            onSuccess: function (result) {
+                if (window.PosLoading) {
+                    window.PosLoading.done();
+                }
+                submitPaymentSuccess(result);
+            },
             onPending: function () {
+                if (window.PosLoading) {
+                    window.PosLoading.done();
+                }
                 alert('Pembayaran masih pending. Silakan selesaikan di aplikasi bank/e-wallet.');
             },
             onError: function () {
+                if (window.PosLoading) {
+                    window.PosLoading.done();
+                }
                 alert('Pembayaran gagal atau dibatalkan. Anda masih bisa membayar tunai.');
             },
             onClose: function () {
+                if (window.PosLoading) {
+                    window.PosLoading.done();
+                }
                 const modalEl = document.getElementById('paymentMethodModal');
                 if (modalEl) {
                     bootstrap.Modal.getOrCreateInstance(modalEl).show();
                 }
             },
         });
+
+        window.setTimeout(function () {
+            if (window.PosLoading) {
+                window.PosLoading.done();
+            }
+        }, 800);
     }
 
     function launchSnapPayment(event) {

@@ -23,6 +23,8 @@ class Order extends Model
         'amountPaid',
         'amountChange',
         'customer',
+        'customer_id',
+        'loyalty_points_earned',
         'status',
         'payment-status',
         'user_id',

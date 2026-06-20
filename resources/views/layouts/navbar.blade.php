@@ -4,15 +4,19 @@
 @endphp
 
 <header class="pos-site-header">
-    <nav class="navbar navbar-expand-lg navbar-dark pos-navbar" aria-label="Navigasi utama">
-        <div class="container">
-            <a href="{{ $homeUrl }}" class="navbar-brand pos-navbar__brand" aria-label="Beranda Warkop Kayu POS">
-                <img src="{{ asset('img/main-logo.svg') }}" alt="" class="pos-navbar__logo" width="42" height="42" decoding="async">
-                <span class="pos-navbar__brand-text">
-                    <span class="pos-navbar__title">Warkop Kayu</span>
-                    <span class="pos-navbar__subtitle">Kasir POS</span>
-                </span>
+    <nav class="navbar navbar-expand-lg navbar-light pos-navbar pos-navbar--minimal" aria-label="Navigasi utama">
+        <div class="container pos-navbar__container">
+            <a href="{{ $homeUrl }}" class="pos-navbar__brand" aria-label="Beranda Warkop Kayu POS">
+                <img src="{{ asset('img/main-logo.svg') }}" alt="" class="pos-navbar__logo" width="36" height="36" decoding="async">
+                <span class="pos-navbar__title">Warkop Kayu</span>
             </a>
+
+            @auth
+                <span class="pos-navbar__user-badge d-none d-lg-inline-flex" title="{{ Auth::user()->name }}">
+                    <i class="bi bi-person-fill" aria-hidden="true"></i>
+                    <span>{{ Auth::user()->name }}</span>
+                </span>
+            @endauth
 
             <button
                 class="navbar-toggler pos-navbar__toggler"
@@ -27,60 +31,44 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse pos-navbar__collapse" id="mainNavbar">
-                <ul class="navbar-nav ms-lg-auto align-items-lg-center">
+            <div class="collapse navbar-collapse pos-navbar__menu" id="mainNavbar">
+                <ul class="navbar-nav ms-lg-auto">
                     @guest
                         @if (Route::has('login'))
                             <li class="nav-item">
-                                <a class="nav-link pos-nav-link @if(request()->routeIs('login')) is-active @endif" href="{{ route('login') }}">
-                                    <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
-                                    <span>Login Kasir</span>
+                                <a class="pos-navbar__link @if(request()->routeIs('login')) is-active @endif" href="{{ route('login') }}">
+                                    Login
                                 </a>
                             </li>
                         @endif
                     @else
                         <li class="nav-item d-lg-none">
-                            <div class="pos-navbar__user pos-navbar__user--mobile">
-                                <i class="bi bi-person-circle" aria-hidden="true"></i>
-                                <div>
-                                    <span class="pos-navbar__user-name">{{ Auth::user()->name }}</span>
-                                    <span class="pos-navbar__user-role">Staf kasir</span>
-                                </div>
-                            </div>
+                            <span class="pos-navbar__user-badge pos-navbar__user-badge--mobile">
+                                <i class="bi bi-person-fill" aria-hidden="true"></i>
+                                {{ Auth::user()->name }}
+                            </span>
                         </li>
-
                         <li class="nav-item">
-                            <a class="nav-link pos-nav-link @if(request()->routeIs('home')) is-active @endif" href="{{ route('home') }}">
-                                <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
-                                <span>Menu Kasir</span>
+                            <a class="pos-navbar__link @if(request()->routeIs('home')) is-active @endif" href="{{ route('home') }}">
+                                Menu
                             </a>
                         </li>
-
+                        <li class="nav-item">
+                            <a class="pos-navbar__link @if(request()->routeIs('customers.*')) is-active @endif" href="{{ route('customers.index') }}">
+                                Member
+                            </a>
+                        </li>
                         @if ($inventoryUrl)
                             <li class="nav-item">
-                                <a class="nav-link pos-nav-link" href="{{ $inventoryUrl }}" target="_blank" rel="noopener noreferrer">
-                                    <i class="bi bi-box-seam" aria-hidden="true"></i>
-                                    <span>Inventory</span>
-                                    <i class="bi bi-box-arrow-up-right pos-nav-link__external" aria-hidden="true"></i>
+                                <a class="pos-navbar__link" href="{{ $inventoryUrl }}" target="_blank" rel="noopener noreferrer">
+                                    Inventory
                                 </a>
                             </li>
                         @endif
-
-                        <li class="nav-item d-none d-lg-flex">
-                            <div class="pos-navbar__user" aria-label="Pengguna aktif">
-                                <i class="bi bi-person-circle" aria-hidden="true"></i>
-                                <div>
-                                    <span class="pos-navbar__user-name">{{ Auth::user()->name }}</span>
-                                    <span class="pos-navbar__user-role">Staf kasir</span>
-                                </div>
-                            </div>
-                        </li>
-
                         <li class="nav-item">
-                            <a class="nav-link pos-nav-link pos-nav-link--logout" href="{{ route('logout') }}"
+                            <a class="pos-navbar__link pos-navbar__link--muted" href="{{ route('logout') }}"
                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                                <span>Keluar</span>
+                                Keluar
                             </a>
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
                         </li>

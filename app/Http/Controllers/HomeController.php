@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Services\Inventory\InventoryOrderPushService;
 use App\Services\Midtrans\SnapTokenService;
+use App\Services\Customer\CustomerMembershipService;
+use App\Models\Customer;
+use App\Support\CustomerPhone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +17,7 @@ class HomeController extends Controller
     public function __construct(
         private InventoryOrderPushService $inventoryOrderPush,
         private SnapTokenService $snapTokenService,
+        private CustomerMembershipService $customerMembership,
     ) {
         $this->middleware('auth');
     }
@@ -66,9 +70,41 @@ class HomeController extends Controller
     {
         $request->validate([
             'customerName' => ['required', 'string', 'max:120'],
+            'memberMode' => ['nullable', 'in:none,existing,new'],
+            'memberPhone' => ['nullable', 'string', 'max:20'],
+            'customerId' => ['nullable', 'integer'],
         ]);
 
+        $memberMode = (string) $request->input('memberMode', 'none');
         $csName = trim((string) $request->input('customerName'));
+        $customerId = null;
+
+        if ($memberMode === 'existing') {
+            $memberPhone = trim((string) $request->input('memberPhone', ''));
+            $customer = $this->customerMembership->findByPhone($memberPhone);
+
+            if (! $customer) {
+                return redirect('home')->with('lastAct', 'Member tidak ditemukan. Periksa nomor telepon atau daftar sebagai member baru.');
+            }
+
+            $customerId = (int) $customer->id;
+            $csName = $customer->name;
+        } elseif ($memberMode === 'new') {
+            $memberPhone = trim((string) $request->input('memberPhone', ''));
+
+            if ($memberPhone === '') {
+                return redirect('home')->with('lastAct', 'Nomor telepon wajib diisi untuk mendaftar member.');
+            }
+
+            try {
+                $customer = $this->customerMembership->createMember($csName, $memberPhone);
+            } catch (\InvalidArgumentException $e) {
+                return redirect('home')->with('lastAct', $e->getMessage());
+            }
+
+            $customerId = (int) $customer->id;
+            $csName = $customer->name;
+        }
 
         $basketOwner = DB::table('carts')
             ->where('user_id', Auth::id())
@@ -124,6 +160,8 @@ class HomeController extends Controller
             DB::table('order')->where('id', $orderId)->update([
                 'total' => $total,
                 'customer' => $csName,
+                'customer_id' => $customerId,
+                'loyalty_points_earned' => null,
                 'updated_at' => now(),
             ]);
 
@@ -132,6 +170,7 @@ class HomeController extends Controller
             $orderId = (int) DB::table('order')->insertGetId([
                 'total' => $total,
                 'customer' => $csName,
+                'customer_id' => $customerId,
                 'status' => 'waiting-payment',
                 'payment-status' => 'pending',
                 'user_id' => Auth::id(),
@@ -182,6 +221,7 @@ class HomeController extends Controller
             'successUrl' => route('payment-success'),
             'orderTarget' => $orderId,
             'total' => $total,
+            'memberCustomer' => $customerId ? Customer::query()->find($customerId) : null,
         ]);
     }
 
@@ -290,6 +330,8 @@ class HomeController extends Controller
             ->where('order_id', $orderId)
             ->update(['status' => 'Ordered', 'updated_at' => now()]);
 
+        $this->customerMembership->awardPointsForOrder($orderId);
+
         if ($paymentMethod !== null) {
             $this->inventoryOrderPush->pushPaidOrder($orderId, $paymentMethod);
         }
@@ -323,10 +365,23 @@ class HomeController extends Controller
         int $pay,
         int $change,
         string $paymentMethod,
-        string $payReference = '-'
+        string $payReference = '-',
+        ?object $order = null,
     ) {
         $baskets = $this->getOrderItems($orderId);
         $total = (int) $baskets->sum('subtotal');
+        $order = $order ?? DB::table('order')->where('id', $orderId)->first();
+        $loyaltyEarned = (int) ($order->loyalty_points_earned ?? 0);
+        $memberPhone = null;
+        $memberTotalPoints = null;
+
+        if (! empty($order->customer_id)) {
+            $member = Customer::query()->find($order->customer_id);
+            if ($member) {
+                $memberPhone = CustomerPhone::display($member->phone);
+                $memberTotalPoints = (int) $member->loyalty_points;
+            }
+        }
 
         return view('reciept', [
             'baskets' => $baskets,
@@ -338,6 +393,9 @@ class HomeController extends Controller
             'paymentMethod' => $paymentMethod,
             'payReference' => $payReference,
             'orderAt' => now()->timezone('Asia/Jakarta')->format('d/m/Y H:i'),
+            'loyaltyEarned' => $loyaltyEarned,
+            'memberPhone' => $memberPhone,
+            'memberTotalPoints' => $memberTotalPoints,
         ]);
     }
 }

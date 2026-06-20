@@ -6,6 +6,7 @@
 @endphp
 @push('body-attrs')
 data-cart-count="{{ $cartItemCount }}"
+data-member-lookup-url="{{ route('customers.lookup') }}"
 @endpush
 
 @section('content')
@@ -108,16 +109,56 @@ data-cart-count="{{ $cartItemCount }}"
             </div>
             @if($hasCartItems)
             <div class="modal-footer pos-modal__footer border-0 flex-column align-items-stretch gap-3">
-                <form action="{{ url('/home/order') }}" method="POST" class="pos-checkout-form">
+                <form action="{{ url('/home/order') }}" method="POST" class="pos-checkout-form" data-loading-message="Menyiapkan pembayaran...">
                     @csrf
+                    <input type="hidden" name="customerId" id="customerId" value="">
+
                     <label for="customerName" class="form-label fw-semibold mb-1">Nama pelanggan</label>
-                    <div class="input-group">
+                    <div class="input-group mb-3">
                         <span class="input-group-text"><i class="bi bi-person"></i></span>
                         <input type="text" name="customerName" id="customerName" class="form-control form-control-lg" placeholder="Contoh: Budi" required autocomplete="name">
-                        <button type="submit" class="btn btn-success btn-lg">
-                            Bayar <i class="bi bi-arrow-right-short"></i>
-                        </button>
                     </div>
+
+                    <fieldset class="pos-member-fieldset mb-3">
+                        <legend class="form-label fw-semibold mb-2">Member</legend>
+                        <div class="d-flex flex-column gap-2">
+                            <label class="pos-member-option">
+                                <input type="radio" name="memberMode" value="none" checked>
+                                <span>Bukan member</span>
+                            </label>
+                            <label class="pos-member-option">
+                                <input type="radio" name="memberMode" value="existing">
+                                <span>Sudah punya member</span>
+                            </label>
+                            <label class="pos-member-option">
+                                <input type="radio" name="memberMode" value="new">
+                                <span>Daftar member baru</span>
+                            </label>
+                        </div>
+                    </fieldset>
+
+                    <div class="pos-member-panel mb-3" data-member-panel="existing" hidden>
+                        <label for="memberPhoneExisting" class="form-label fw-semibold mb-1">Nomor telepon member</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                            <input type="tel" name="memberPhone" id="memberPhoneExisting" class="form-control" placeholder="08xxxxxxxxxx" maxlength="20" autocomplete="tel">
+                            <button type="button" class="btn btn-outline-primary" data-member-lookup>Cari</button>
+                        </div>
+                        <div class="mt-2" data-member-result hidden></div>
+                    </div>
+
+                    <div class="pos-member-panel mb-3" data-member-panel="new" hidden>
+                        <label for="memberPhoneNew" class="form-label fw-semibold mb-1">Nomor telepon member baru</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                            <input type="tel" name="memberPhone" id="memberPhoneNew" class="form-control" placeholder="08xxxxxxxxxx" maxlength="20" autocomplete="tel" disabled>
+                        </div>
+                        <p class="small text-muted mb-0 mt-2">Nama di atas akan dipakai sebagai data member.</p>
+                    </div>
+
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        Lanjut ke pembayaran <i class="bi bi-arrow-right-short"></i>
+                    </button>
                 </form>
             </div>
             @endif
@@ -215,3 +256,7 @@ data-cart-count="{{ $cartItemCount }}"
 <div id="decor-backdrop" class="modal-backdrop fade show" style="display: none"></div>
 
 @endsection
+
+@push('scripts')
+<script src="{{ asset('js/pos-member.js') }}" defer></script>
+@endpush
