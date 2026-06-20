@@ -14,12 +14,21 @@ class InventoryOrderPushService
     public function pushPaidOrder(int|string $orderId, string $paymentMethod): void
     {
         if (! $this->client->enabled()) {
+            Log::warning('Inventory order push skipped: integration disabled or not configured.', [
+                'order_id' => $orderId,
+                'enabled' => (bool) config('inventory.enabled'),
+                'base_url' => config('inventory.base_url'),
+                'has_token' => (bool) config('inventory.api_token'),
+            ]);
+
             return;
         }
 
         $order = DB::table('order')->where('id', $orderId)->first();
 
         if (! $order) {
+            Log::warning('Inventory order push skipped: order not found.', ['order_id' => $orderId]);
+
             return;
         }
 
@@ -50,16 +59,19 @@ class InventoryOrderPushService
         $payloadItems = [];
 
         foreach ($items as $item) {
-            if (! $item->inventory_menu_code) {
-                Log::warning('Skipping inventory push for menu without inventory code.', [
+            $menuCode = trim((string) ($item->inventory_menu_code ?? ''));
+
+            if ($menuCode === '') {
+                Log::warning('Skipping inventory push item without menu code.', [
                     'order_id' => $orderId,
+                    'menu_name' => $item->menu_name,
                 ]);
 
                 continue;
             }
 
             $payloadItems[] = [
-                'menu_code' => $item->inventory_menu_code,
+                'menu_code' => $menuCode,
                 'menu_name' => $item->menu_name,
                 'menu_price' => (int) $item->menu_price,
                 'quantity' => (int) $item->quantity,
@@ -75,6 +87,7 @@ class InventoryOrderPushService
         if ($payloadItems === []) {
             Log::warning('Inventory order push skipped: no linked menu items.', [
                 'order_id' => $orderId,
+                'item_count' => $items->count(),
             ]);
 
             return;
@@ -98,10 +111,18 @@ class InventoryOrderPushService
         ];
 
         try {
-            $this->client->pushOrder($payload);
+            $result = $this->client->pushOrder($payload);
+
+            Log::info('Inventory order push succeeded.', [
+                'order_id' => $orderId,
+                'external_order_id' => $payload['external_order_id'],
+                'status' => $result['status'] ?? 'unknown',
+                'warnings' => $result['warnings'] ?? [],
+            ]);
         } catch (\Throwable $e) {
             Log::error('Inventory order push failed.', [
                 'order_id' => $orderId,
+                'external_order_id' => $payload['external_order_id'],
                 'message' => $e->getMessage(),
             ]);
         }

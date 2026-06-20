@@ -2,6 +2,7 @@
 
 namespace App\Services\Inventory;
 
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -25,11 +26,23 @@ class InventoryClient
 
     public function pushOrder(array $payload): array
     {
-        $response = $this->request()
-            ->post('/api/orders', $payload)
-            ->throw();
+        try {
+            $response = $this->request()
+                ->post('/api/orders', $payload)
+                ->throw();
 
-        return $response->json();
+            return $response->json();
+        } catch (RequestException $exception) {
+            $response = $exception->response;
+
+            Log::error('Inventory order push HTTP error.', [
+                'status' => $response?->status(),
+                'body' => $response?->json() ?? $response?->body(),
+                'external_order_id' => $payload['external_order_id'] ?? null,
+            ]);
+
+            throw $exception;
+        }
     }
 
     private function request()

@@ -102,6 +102,12 @@ class InventoryMenuSyncService
                 ->where('inventory_menu_code', $code)
                 ->first();
 
+            if (! $existing && ! empty($remote['id'])) {
+                $existing = DB::table('menus')
+                    ->where('inventory_menu_id', $remote['id'])
+                    ->first();
+            }
+
             $category = $this->normalizeCategory(
                 (string) ($remote['category'] ?? $existing->category ?? $this->inferCategory((string) ($remote['name'] ?? '')))
             );
@@ -122,7 +128,9 @@ class InventoryMenuSyncService
             ];
 
             if ($existing) {
-                DB::table('menus')->where('id', $existing->id)->update($payload);
+                DB::table('menus')->where('id', $existing->id)->update(array_merge($payload, [
+                    'inventory_menu_code' => $code,
+                ]));
 
                 continue;
             }
