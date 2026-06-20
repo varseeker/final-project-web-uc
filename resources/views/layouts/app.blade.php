@@ -16,13 +16,13 @@
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
     @stack('head')
 </head>
-<body class="bg-light" @stack('body-attrs')>
+<body class="bg-light pos-app" @stack('body-attrs')>
     <a href="#main-content" class="skip-link">Lewati ke konten</a>
     @include('layouts.navbar')
-    <main id="main-content" class="py-4">
+    <main id="main-content" class="pos-main py-4">
         @yield('content')
     </main>
-    <div class="mt-4 border-top">
+    <div class="pos-footer-wrap">
         @include('layouts.footer')
     </div>
     @stack('scripts')

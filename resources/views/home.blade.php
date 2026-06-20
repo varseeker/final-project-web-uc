@@ -9,7 +9,7 @@ data-cart-count="{{ $cartItemCount }}"
 @endpush
 
 @section('content')
-<main class="container py-4 pb-pos-dock">
+<div class="container py-4 pb-pos-dock">
 
     <!-- <script>
         $(document).ready(function () {
@@ -127,7 +127,7 @@ data-cart-count="{{ $cartItemCount }}"
 
     @include('partials.pos.menu-catalog', ['menuCatalog' => $menuCatalog ?? null])
 
-</main>
+</div>
 
 <!-- Submit Confirmation Modal -->
 <div class="modal fade" id="submitOrderModal" tabindex="-1" aria-labelledby="submitOrderModalLabel" aria-hidden="true">

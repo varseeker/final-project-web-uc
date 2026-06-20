@@ -16,16 +16,18 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
 </head>
-<body class="bg-light">
+<body class="bg-light pos-app">
     @include('layouts.navbar')
-    <div class="main-content shifted" id="main-content">
+    <main class="pos-main main-content shifted" id="main-content">
         <div class="container">    
             <div class="row" style="margin-top: 1em; margin-bottom: 3em;">
                 @yield('content')
             </div>
         </div>
+    </main>
+    <div class="pos-footer-wrap">
+        @include('layouts.footer')
     </div>
-    @include('layouts.footer')
 
 </body>
 </html>

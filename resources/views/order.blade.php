@@ -1,15 +1,6 @@
 @extends('layouts.appMidtrans')
 
 @section('content')
-<!-- Main Content -->
-
-
-
-<script>
-    const snapToken = "{{$snapToken}}";
-</script>
-
-
 <main class="container py-4">
   <!-- Top Action Bar -->
   <div class="flex-wrap justify-content-between align-items-center mb-4">
@@ -97,7 +88,7 @@
         <button class="btn btn-outline-success btn-payment btn-tunai w-100 my-4 me-2 col btn-lg" data-bs-target="#cashPaymentModal" data-bs-toggle="modal"> 
           <i class="bi bi-cash-stack me-2"></i> Cash
         </button>
-        <button class="btn btn-outline-info btn-payment btn-qris w-100  my-4 col  btn-lg" id="pay-button" @if(empty($snapToken)) disabled @endif>
+        <button type="button" class="btn btn-outline-info btn-payment btn-qris w-100 my-4 col btn-lg" id="pay-button" @if(empty($snapToken)) disabled @endif>
           <i class="bi bi-qr-code-scan me-2"></i> Qris
         </button>
         @if(empty($snapToken))
@@ -149,77 +140,116 @@
 
 <!-- <div id="decor-backdrop" class="modal-backdrop fade show" style="display: none"></div> -->
 
+@endsection
+
+@push('scripts')
 <script>
-      const snapToken = @json($snapToken ?? '');
+(function () {
+    const snapToken = @json($snapToken ?? '');
+    const successUrl = @json($successUrl);
+    const orderTarget = @json($orderTarget);
+    const csrfToken = @json(csrf_token());
+    const customerName = @json($csName);
 
-      document.getElementById('pay-button')?.addEventListener('click', function () {
-          if (!snapToken) {
-              alert('Pembayaran QRIS belum siap. Silakan gunakan pembayaran tunai.');
-              return;
-          }
+    function submitPaymentSuccess(result) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = successUrl;
 
-          snap.pay(snapToken, {
-              onSuccess: function(result) {
-                  const form = document.createElement('form');
-                  form.method = 'POST';
-                  form.action = "{{ $successUrl }}";
+        const fields = {
+            _token: csrfToken,
+            cartToDelete: String(orderTarget),
+            order_id: result.order_id || result.transaction_id || '-',
+            customerName: customerName,
+        };
 
-                  const csrf = document.createElement('input');
-                  csrf.type = 'hidden';
-                  csrf.name = '_token';
-                  csrf.value = '{{ csrf_token() }}';
-                  form.appendChild(csrf);
+        Object.entries(fields).forEach(function ([name, value]) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            form.appendChild(input);
+        });
 
-                  const cartToDelete = document.createElement('input');
-                  cartToDelete.type = 'hidden';
-                  cartToDelete.name = 'cartToDelete';
-                  cartToDelete.value = '{{ $orderTarget }}';
-                  form.appendChild(cartToDelete);
+        document.body.appendChild(form);
+        form.submit();
+    }
 
-                  const orderIdInput = document.createElement('input');
-                  orderIdInput.type = 'hidden';
-                  orderIdInput.name = 'order_id';
-                  orderIdInput.value = result.order_id || result.transaction_id || '-';
-                  form.appendChild(orderIdInput);
+    function runSnapPay() {
+        if (!snapToken) {
+            alert('Pembayaran QRIS belum siap. Silakan gunakan pembayaran tunai.');
+            return;
+        }
 
-                  const customerName = document.createElement('input');
-                  customerName.type = 'hidden';
-                  customerName.name = 'customerName';
-                  customerName.value = @json($csName);
-                  form.appendChild(customerName);
+        if (typeof window.snap === 'undefined') {
+            alert('Midtrans Snap belum dimuat. Silakan refresh halaman dan coba lagi.');
+            return;
+        }
 
-                  document.body.appendChild(form);
-                  form.submit();
-              },
-              onPending: function(result) {
-                  alert('Pembayaran masih pending. Silakan selesaikan di aplikasi bank/e-wallet.');
-              },
-              onError: function(result) {
-                  alert('Pembayaran gagal atau dibatalkan. Anda masih bisa membayar tunai.');
-              }
-          });
-      });
+        window.snap.pay(snapToken, {
+            onSuccess: submitPaymentSuccess,
+            onPending: function () {
+                alert('Pembayaran masih pending. Silakan selesaikan di aplikasi bank/e-wallet.');
+            },
+            onError: function () {
+                alert('Pembayaran gagal atau dibatalkan. Anda masih bisa membayar tunai.');
+            },
+            onClose: function () {
+                const modalEl = document.getElementById('paymentMethodModal');
+                if (modalEl) {
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                }
+            },
+        });
+    }
+
+    function launchSnapPayment(event) {
+        event.preventDefault();
+
+        const modalEl = document.getElementById('paymentMethodModal');
+        const modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+
+        if (modal) {
+            modalEl.addEventListener('hidden.bs.modal', function onHidden() {
+                modalEl.removeEventListener('hidden.bs.modal', onHidden);
+                runSnapPay();
+            });
+            modal.hide();
+            return;
+        }
+
+        runSnapPay();
+    }
+
+    document.getElementById('pay-button')?.addEventListener('click', launchSnapPayment);
 
     document.addEventListener('DOMContentLoaded', function () {
+        const paymentModalEl = document.getElementById('paymentMethodModal');
+        if (paymentModalEl) {
+            bootstrap.Modal.getOrCreateInstance(paymentModalEl).show();
+        }
+
         const tombolBayar = document.getElementById('tombolBayar');
         const cashAmountInput = document.getElementById('cashAmount');
         const cashTotalDisplay = document.getElementById('cashTotalDisplay');
         const errorMessage = document.getElementById('errorMessage');
 
-        // Ambil nilai total dari display & parsing ke angka
+        if (!tombolBayar || !cashAmountInput || !cashTotalDisplay) {
+            return;
+        }
+
         const total = parseFloat(
             cashTotalDisplay.textContent
                 .replace('Rp', '')
-                .replace(/\./g, '') // hapus titik
+                .replace(/\./g, '')
                 .trim()
         );
 
-        // Format input ke bentuk Rupiah saat user mengetik
         cashAmountInput.addEventListener('keyup', function () {
-            const rawValue = this.value.replace(/\D/g, ''); // Hanya angka
-            this.value = formatRupiah(rawValue, ''); // Format tampilannya
+            const rawValue = this.value.replace(/\D/g, '');
+            this.value = formatRupiah(rawValue, '');
 
-            const paid = parseInt(rawValue || 0);
+            const paid = parseInt(rawValue || 0, 10);
             if (paid >= total) {
                 tombolBayar.disabled = false;
                 errorMessage.style.display = 'none';
@@ -230,10 +260,9 @@
             }
         });
 
-        // Prevent submit jika tetap dipaksa
         tombolBayar.addEventListener('click', function (event) {
             const rawValue = cashAmountInput.value.replace(/\D/g, '');
-            const paid = parseInt(rawValue || 0);
+            const paid = parseInt(rawValue || 0, 10);
 
             if (isNaN(paid) || paid < total) {
                 event.preventDefault();
@@ -242,7 +271,8 @@
             }
         });
 
-        // Fungsi format ke Rupiah
+        tombolBayar.disabled = true;
+
         function formatRupiah(angka, prefix) {
             let number_string = angka.replace(/[^,\d]/g, '').toString(),
                 split = number_string.split(','),
@@ -258,9 +288,7 @@
             rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
             return prefix === undefined ? rupiah : (rupiah ? prefix + rupiah : '');
         }
-
-        // Awal: disable tombol dulu
-        tombolBayar.disabled = true;
     });
+})();
 </script>
-@endsection
+@endpush
