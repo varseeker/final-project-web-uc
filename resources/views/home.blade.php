@@ -112,6 +112,7 @@ data-member-lookup-url="{{ route('customers.lookup') }}"
                 <form action="{{ url('/home/order') }}" method="POST" class="pos-checkout-form" data-loading-message="Menyiapkan pembayaran...">
                     @csrf
                     <input type="hidden" name="customerId" id="customerId" value="">
+                    <input type="hidden" name="useLoyaltyDiscount" id="useLoyaltyDiscount" value="">
 
                     <label for="customerName" class="form-label fw-semibold mb-1">Nama pelanggan</label>
                     <div class="input-group mb-3">
@@ -145,6 +146,7 @@ data-member-lookup-url="{{ route('customers.lookup') }}"
                             <button type="button" class="btn btn-outline-primary" data-member-lookup>Cari</button>
                         </div>
                         <div class="mt-2" data-member-result hidden></div>
+                        <div class="pos-loyalty-confirm mt-3" data-loyalty-confirm hidden></div>
                     </div>
 
                     <div class="pos-member-panel mb-3" data-member-panel="new" hidden>

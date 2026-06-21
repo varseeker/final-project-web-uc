@@ -22,6 +22,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/home/store', [App\Http\Controllers\MenuController::class, 'store']);
 
     Route::post('/home/order', [App\Http\Controllers\HomeController::class, 'orderPage']);
+    Route::post('/home/order/loyalty-discount', [App\Http\Controllers\HomeController::class, 'applyLoyaltyDiscount'])->name('order.loyalty-discount');
     Route::post('/home/order/payment-success', [App\Http\Controllers\HomeController::class, 'paymentSuccess'])->name('payment-success');
     Route::post('/print', [App\Http\Controllers\HomeController::class, 'reciept'])->name('reciept');
 

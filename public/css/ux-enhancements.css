@@ -978,6 +978,21 @@ body.pos-is-loading {
     background: rgba(220, 53, 69, 0.06);
 }
 
+.pos-loyalty-confirm {
+    padding: 0.85rem 1rem;
+    border-radius: 0.65rem;
+    border: 1px solid rgba(255, 193, 7, 0.45);
+    background: rgba(255, 193, 7, 0.08);
+}
+
+.pos-loyalty-confirm__title {
+    color: var(--text-primary, #503b31);
+}
+
+.pos-loyalty-confirm .btn.active {
+    pointer-events: none;
+}
+
 .pos-modal__content {
     border: none;
     border-radius: 1rem;

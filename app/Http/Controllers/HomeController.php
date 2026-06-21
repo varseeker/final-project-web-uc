@@ -74,6 +74,7 @@ class HomeController extends Controller
             'memberMode' => ['nullable', 'in:none,existing,new'],
             'memberPhone' => ['nullable', 'string', 'max:20'],
             'customerId' => ['nullable', 'integer'],
+            'useLoyaltyDiscount' => ['nullable', 'boolean'],
         ]);
 
         $memberMode = (string) $request->input('memberMode', 'none');
@@ -150,23 +151,12 @@ class HomeController extends Controller
         }
 
         $subtotal = $total;
-        $loyaltyDiscountPercent = 0;
-        $loyaltyDiscountAmount = 0;
-        $memberCustomer = null;
-
-        if ($customerId) {
-            $memberCustomer = Customer::query()->find($customerId);
-
-            if ($memberCustomer) {
-                $discount = $this->customerMembership->calculateDiscount(
-                    $subtotal,
-                    (int) $memberCustomer->loyalty_points
-                );
-                $loyaltyDiscountPercent = $discount['percent'];
-                $loyaltyDiscountAmount = $discount['amount'];
-                $total = $discount['total'];
-            }
-        }
+        $memberCustomer = $customerId ? Customer::query()->find($customerId) : null;
+        $useLoyaltyDiscount = $request->boolean('useLoyaltyDiscount');
+        $loyaltyTotals = $this->resolveLoyaltyTotals($subtotal, $memberCustomer, $useLoyaltyDiscount);
+        $total = $loyaltyTotals['total'];
+        $loyaltyDiscountPercent = $loyaltyTotals['loyaltyDiscountPercent'];
+        $loyaltyDiscountAmount = $loyaltyTotals['loyaltyDiscountAmount'];
 
         $orderPayload = [
             'subtotal' => $subtotal,
@@ -216,36 +206,61 @@ class HomeController extends Controller
             ]);
         }
 
-        if (! $this->snapTokenService->configured()) {
-            Log::error('Midtrans is not configured.');
+        return $this->renderOrderPaymentView(
+            orderId: $orderId,
+            baskets: $baskets,
+            csName: $csName,
+            memberCustomer: $memberCustomer,
+            loyaltyTotals: $loyaltyTotals,
+        );
+    }
 
-            return redirect('home')->with(
-                'lastAct',
-                'Pembayaran Midtrans belum dikonfigurasi. Set MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di environment.'
-            );
-        }
-
-        try {
-            $snapToken = $this->snapTokenService->create($orderId, $total, $baskets, $csName);
-        } catch (\Throwable $e) {
-            return redirect('home')->with(
-                'lastAct',
-                'Gagal membuat sesi pembayaran Midtrans. Coba lagi atau gunakan pembayaran tunai.'
-            );
-        }
-
-        return view('order', [
-            'baskets' => $baskets,
-            'csName' => $csName,
-            'snapToken' => $snapToken,
-            'successUrl' => route('payment-success'),
-            'orderTarget' => $orderId,
-            'subtotal' => $subtotal,
-            'loyaltyDiscountPercent' => $loyaltyDiscountPercent,
-            'loyaltyDiscountAmount' => $loyaltyDiscountAmount,
-            'total' => $total,
-            'memberCustomer' => $memberCustomer,
+    public function applyLoyaltyDiscount(Request $request)
+    {
+        $request->validate([
+            'orderTarget' => ['required', 'integer'],
+            'useLoyaltyDiscount' => ['required', 'boolean'],
         ]);
+
+        $orderId = (int) $request->input('orderTarget');
+        $order = DB::table('order')
+            ->where('id', $orderId)
+            ->where('user_id', Auth::id())
+            ->where('payment-status', 'pending')
+            ->first();
+
+        if (! $order) {
+            return redirect('home')->with('lastAct', 'Pesanan tidak ditemukan atau sudah dibayar.');
+        }
+
+        $baskets = $this->getOrderItems($orderId);
+
+        if ($baskets->isEmpty()) {
+            return redirect('home')->with('lastAct', 'Item pesanan tidak ditemukan.');
+        }
+
+        $subtotal = (int) ($order->subtotal ?? $baskets->sum('subtotal'));
+        $memberCustomer = ! empty($order->customer_id)
+            ? Customer::query()->find($order->customer_id)
+            : null;
+        $useLoyaltyDiscount = $request->boolean('useLoyaltyDiscount');
+        $loyaltyTotals = $this->resolveLoyaltyTotals($subtotal, $memberCustomer, $useLoyaltyDiscount);
+
+        DB::table('order')->where('id', $orderId)->update([
+            'subtotal' => $subtotal,
+            'total' => $loyaltyTotals['total'],
+            'loyalty_discount_percent' => $loyaltyTotals['loyaltyDiscountPercent'],
+            'loyalty_discount_amount' => $loyaltyTotals['loyaltyDiscountAmount'],
+            'updated_at' => now(),
+        ]);
+
+        return $this->renderOrderPaymentView(
+            orderId: $orderId,
+            baskets: $baskets,
+            csName: (string) $order->customer,
+            memberCustomer: $memberCustomer,
+            loyaltyTotals: $loyaltyTotals,
+        );
     }
 
     public function paymentSuccess(Request $request)
@@ -380,6 +395,89 @@ class HomeController extends Controller
     private function generateCashTransactionReference(): string
     {
         return 'KAYU-TRXCASH-'.random_int(100000, 999999).'-'.date('Ymd');
+    }
+
+    /**
+     * @return array{
+     *     subtotal: int,
+     *     total: int,
+     *     loyaltyDiscountPercent: int,
+     *     loyaltyDiscountAmount: int,
+     *     loyaltyDiscountAvailablePercent: int,
+     *     loyaltyDiscountApplied: bool
+     * }
+     */
+    private function resolveLoyaltyTotals(int $subtotal, ?Customer $member, bool $useLoyaltyDiscount): array
+    {
+        $loyaltyDiscountPercent = 0;
+        $loyaltyDiscountAmount = 0;
+        $availablePercent = $member
+            ? $this->customerMembership->calculateDiscountPercent((int) $member->loyalty_points)
+            : 0;
+
+        if ($member && $useLoyaltyDiscount && $availablePercent > 0) {
+            $discount = $this->customerMembership->calculateDiscount(
+                $subtotal,
+                (int) $member->loyalty_points
+            );
+            $loyaltyDiscountPercent = $discount['percent'];
+            $loyaltyDiscountAmount = $discount['amount'];
+        }
+
+        return [
+            'subtotal' => $subtotal,
+            'total' => max(0, $subtotal - $loyaltyDiscountAmount),
+            'loyaltyDiscountPercent' => $loyaltyDiscountPercent,
+            'loyaltyDiscountAmount' => $loyaltyDiscountAmount,
+            'loyaltyDiscountAvailablePercent' => $availablePercent,
+            'loyaltyDiscountApplied' => $useLoyaltyDiscount && $loyaltyDiscountAmount > 0,
+        ];
+    }
+
+    private function renderOrderPaymentView(
+        int $orderId,
+        $baskets,
+        string $csName,
+        ?Customer $memberCustomer,
+        array $loyaltyTotals,
+    ) {
+        if (! $this->snapTokenService->configured()) {
+            Log::error('Midtrans is not configured.');
+
+            return redirect('home')->with(
+                'lastAct',
+                'Pembayaran Midtrans belum dikonfigurasi. Set MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di environment.'
+            );
+        }
+
+        try {
+            $snapToken = $this->snapTokenService->create(
+                $orderId,
+                (int) $loyaltyTotals['total'],
+                $baskets,
+                $csName
+            );
+        } catch (\Throwable $e) {
+            return redirect('home')->with(
+                'lastAct',
+                'Gagal membuat sesi pembayaran Midtrans. Coba lagi atau gunakan pembayaran tunai.'
+            );
+        }
+
+        return view('order', [
+            'baskets' => $baskets,
+            'csName' => $csName,
+            'snapToken' => $snapToken,
+            'successUrl' => route('payment-success'),
+            'orderTarget' => $orderId,
+            'subtotal' => $loyaltyTotals['subtotal'],
+            'loyaltyDiscountPercent' => $loyaltyTotals['loyaltyDiscountPercent'],
+            'loyaltyDiscountAmount' => $loyaltyTotals['loyaltyDiscountAmount'],
+            'loyaltyDiscountAvailablePercent' => $loyaltyTotals['loyaltyDiscountAvailablePercent'],
+            'loyaltyDiscountApplied' => $loyaltyTotals['loyaltyDiscountApplied'],
+            'total' => $loyaltyTotals['total'],
+            'memberCustomer' => $memberCustomer,
+        ]);
     }
 
     private function receiptView(
