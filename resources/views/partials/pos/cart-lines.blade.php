@@ -56,8 +56,25 @@
 </div>
 
 @if(count($baskets) > 0)
-    <div class="pos-cart-summary">
-        <span>Subtotal</span>
-        <strong>Rp{{ number_format($total, 0, ',', '.') }}</strong>
-    </div>
+    @if(($mode ?? 'cart') === 'checkout')
+        <div class="pos-cart-summary pos-cart-summary--checkout" data-checkout-summary data-checkout-subtotal="{{ $total }}">
+            <div class="pos-cart-summary__row">
+                <span>Subtotal</span>
+                <strong data-summary-subtotal>Rp{{ number_format($total, 0, ',', '.') }}</strong>
+            </div>
+            <div class="pos-cart-summary__row text-success" data-summary-discount-row hidden>
+                <span>Diskon member (<span data-summary-discount-percent>0</span>%)</span>
+                <strong data-summary-discount-amount>- Rp0</strong>
+            </div>
+            <div class="pos-cart-summary__row pos-cart-summary__row--total">
+                <span>Total bayar</span>
+                <strong data-summary-grand-total>Rp{{ number_format($total, 0, ',', '.') }}</strong>
+            </div>
+        </div>
+    @else
+        <div class="pos-cart-summary">
+            <span>Subtotal</span>
+            <strong>Rp{{ number_format($total, 0, ',', '.') }}</strong>
+        </div>
+    @endif
 @endif

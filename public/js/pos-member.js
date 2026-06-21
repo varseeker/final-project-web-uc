@@ -23,6 +23,76 @@
         alert(message);
     }
 
+    function formatRupiah(value) {
+        return 'Rp' + Number(value || 0).toLocaleString('id-ID');
+    }
+
+    function getOrderModal() {
+        return qs('#orderModal');
+    }
+
+    function getCheckoutSummary() {
+        return qs('[data-checkout-summary]', getOrderModal());
+    }
+
+    function getBaseSubtotal() {
+        var summary = getCheckoutSummary();
+        if (!summary) {
+            return 0;
+        }
+
+        return parseInt(summary.getAttribute('data-checkout-subtotal') || '0', 10) || 0;
+    }
+
+    function calculateDiscountAmount(subtotal, discountPercent) {
+        if (discountPercent <= 0 || subtotal <= 0) {
+            return 0;
+        }
+
+        return Math.floor(subtotal * discountPercent / 100);
+    }
+
+    function updateCheckoutSummary(usePoints, discountPercent) {
+        var summary = getCheckoutSummary();
+        if (!summary) {
+            return;
+        }
+
+        var subtotal = getBaseSubtotal();
+        var discountAmount = usePoints ? calculateDiscountAmount(subtotal, discountPercent) : 0;
+        var grandTotal = Math.max(0, subtotal - discountAmount);
+
+        var subtotalEl = qs('[data-summary-subtotal]', summary);
+        var discountRow = qs('[data-summary-discount-row]', summary);
+        var discountPercentEl = qs('[data-summary-discount-percent]', summary);
+        var discountAmountEl = qs('[data-summary-discount-amount]', summary);
+        var grandTotalEl = qs('[data-summary-grand-total]', summary);
+
+        if (subtotalEl) {
+            subtotalEl.textContent = formatRupiah(subtotal);
+        }
+
+        if (discountRow) {
+            discountRow.hidden = !usePoints || discountAmount <= 0;
+        }
+
+        if (discountPercentEl) {
+            discountPercentEl.textContent = String(discountPercent);
+        }
+
+        if (discountAmountEl) {
+            discountAmountEl.textContent = '- ' + formatRupiah(discountAmount);
+        }
+
+        if (grandTotalEl) {
+            grandTotalEl.textContent = formatRupiah(grandTotal);
+        }
+    }
+
+    function resetCheckoutSummary() {
+        updateCheckoutSummary(false, 0);
+    }
+
     function setMemberPanel(mode) {
         var existingPanel = qs('[data-member-panel="existing"]');
         var newPanel = qs('[data-member-panel="new"]');
@@ -51,6 +121,10 @@
         }
     }
 
+    function getLoyaltyConfirmEl() {
+        return qs('[data-loyalty-confirm]', getOrderModal());
+    }
+
     function resetLoyaltyConfirm(form) {
         activeMember = null;
         loyaltyChoice = null;
@@ -60,22 +134,28 @@
             useInput.value = '';
         }
 
-        var confirmEl = qs('[data-loyalty-confirm]', form);
+        var confirmEl = getLoyaltyConfirmEl();
         if (confirmEl) {
             confirmEl.hidden = true;
             confirmEl.innerHTML = '';
         }
+
+        resetCheckoutSummary();
     }
 
     function setLoyaltyChoice(form, usePoints) {
         loyaltyChoice = usePoints ? 'yes' : 'no';
+
+        var discountPercent = Number(activeMember?.loyalty_discount_percent || 0);
 
         var useInput = qs('#useLoyaltyDiscount', form);
         if (useInput) {
             useInput.value = usePoints ? '1' : '0';
         }
 
-        var confirmEl = qs('[data-loyalty-confirm]', form);
+        updateCheckoutSummary(usePoints, discountPercent);
+
+        var confirmEl = getLoyaltyConfirmEl();
         var noteEl = confirmEl ? confirmEl.querySelector('[data-loyalty-choice-note]') : null;
         var yesBtn = confirmEl ? confirmEl.querySelector('[data-loyalty-choice="1"]') : null;
         var noBtn = confirmEl ? confirmEl.querySelector('[data-loyalty-choice="0"]') : null;
@@ -83,8 +163,8 @@
         if (noteEl) {
             noteEl.hidden = false;
             noteEl.textContent = usePoints
-                ? 'Diskon ' + (activeMember?.loyalty_discount_percent || 0) + '% akan diterapkan saat pembayaran.'
-                : 'Poin tidak digunakan untuk transaksi ini.';
+                ? 'Diskon ' + discountPercent + '% diterapkan. Total bayar sudah diperbarui.'
+                : 'Poin tidak digunakan. Total bayar tetap subtotal penuh.';
         }
 
         if (yesBtn) {
@@ -99,7 +179,7 @@
     }
 
     function renderLoyaltyConfirm(form, customer) {
-        var confirmEl = qs('[data-loyalty-confirm]', form);
+        var confirmEl = getLoyaltyConfirmEl();
         var useInput = qs('#useLoyaltyDiscount', form);
 
         if (!confirmEl || !useInput) {
@@ -113,12 +193,14 @@
             confirmEl.innerHTML = '';
             useInput.value = '0';
             loyaltyChoice = 'no';
+            resetCheckoutSummary();
             return;
         }
 
         activeMember = customer;
         loyaltyChoice = null;
         useInput.value = '';
+        resetCheckoutSummary();
 
         confirmEl.hidden = false;
         confirmEl.innerHTML =
@@ -141,6 +223,8 @@
         confirmEl.querySelector('[data-loyalty-choice="0"]')?.addEventListener('click', function () {
             setLoyaltyChoice(form, false);
         });
+
+        confirmEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function renderMemberResult(customer, form) {
@@ -235,6 +319,7 @@
         var modeInputs = qsa('input[name="memberMode"]', form);
         var lookupBtn = qs('[data-member-lookup]', form);
         var resultEl = qs('[data-member-result]', form);
+        var orderModal = getOrderModal();
 
         function activePhoneInput(mode) {
             if (mode === 'new') {
@@ -259,6 +344,17 @@
             return input.checked;
         });
         setMemberPanel(checked ? checked.value : 'none');
+
+        if (orderModal) {
+            orderModal.addEventListener('shown.bs.modal', function () {
+                resetLoyaltyConfirm(form);
+                setMemberPanel(
+                    (modeInputs.find(function (input) {
+                        return input.checked;
+                    }) || {}).value || 'none'
+                );
+            });
+        }
 
         if (lookupBtn) {
             lookupBtn.addEventListener('click', function () {
@@ -329,7 +425,7 @@
                 ) {
                     event.preventDefault();
                     showToast('Konfirmasi penggunaan poin terlebih dahulu (Ya atau Tidak).');
-                    qs('[data-loyalty-confirm]', form)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    getLoyaltyConfirmEl()?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     return;
                 }
             }

@@ -35,9 +35,6 @@
                   $loyaltyDiscountAvailablePercent = (int) ($loyaltyDiscountAvailablePercent ?? 0);
                   $loyaltyDiscountApplied = (bool) ($loyaltyDiscountApplied ?? false);
                   $total = (int) ($total ?? $subtotal);
-                  $loyaltyConfirmPending = ! empty($memberCustomer)
-                      && $loyaltyDiscountAvailablePercent > 0
-                      && ! $loyaltyDiscountApplied;
                 @endphp
                 @foreach ($baskets as $index => $rock)
                       <div class="col" style="margin: 20px 0 0 0;">
@@ -72,38 +69,6 @@
                   <h5>Diskon member ({{ $loyaltyDiscountPercent }}%)</h5>
                   <h5>- Rp{{ number_format($loyaltyDiscountAmount, 0, ',', '.') }}</h5>
                 </div>
-                <div class="alert alert-success py-2 px-3 mb-3">
-                  <i class="bi bi-check-circle me-1"></i>
-                  Diskon poin {{ $loyaltyDiscountPercent }}% diterapkan
-                  (- Rp{{ number_format($loyaltyDiscountAmount, 0, ',', '.') }})
-                </div>
-                @elseif($loyaltyConfirmPending)
-                <div class="pos-loyalty-confirm mb-3" data-order-loyalty-confirm
-                     data-order-target="{{ $orderTarget }}"
-                     data-discount-percent="{{ $loyaltyDiscountAvailablePercent }}"
-                     data-member-points="{{ (int) $memberCustomer->loyalty_points }}">
-                  <p class="pos-loyalty-confirm__title mb-2 fw-semibold">
-                    <i class="bi bi-stars text-warning me-1"></i>
-                    Konfirmasi penggunaan poin
-                  </p>
-                  <p class="small text-muted mb-3">
-                    Member memiliki {{ number_format($memberCustomer->loyalty_points, 0, ',', '.') }} poin
-                    (diskon {{ $loyaltyDiscountAvailablePercent }}% tersedia).
-                    Gunakan poin untuk transaksi ini?
-                  </p>
-                  <div class="d-flex flex-wrap gap-2">
-                    <form action="{{ route('order.loyalty-discount') }}" method="POST" class="d-inline" data-loading-message="Menerapkan diskon poin...">
-                      @csrf
-                      <input type="hidden" name="orderTarget" value="{{ $orderTarget }}">
-                      <input type="hidden" name="useLoyaltyDiscount" value="1">
-                      <button type="submit" class="btn btn-success btn-sm">Ya, gunakan poin</button>
-                    </form>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-loyalty-decline>
-                      Tidak, lanjut tanpa diskon
-                    </button>
-                  </div>
-                  <p class="small text-muted mb-0 mt-2" data-loyalty-choice-note hidden></p>
-                </div>
                 @endif
                 <div class="d-flex justify-content-between align-items-center fw-bold mt-2">
                   <h4>Total bayar</h4>
@@ -114,7 +79,7 @@
 
                   <div class="col-auto">
                   
-      <button class="btn btn-success btn-lg" id="payOrderBtn" data-bs-toggle="modal" data-bs-target="#paymentMethodModal" @if($loyaltyConfirmPending) disabled @endif>Pay Order <i class="bi bi-cart"></i></button>
+      <button class="btn btn-success btn-lg" id="payOrderBtn" data-bs-toggle="modal" data-bs-target="#paymentMethodModal">Pay Order <i class="bi bi-cart"></i></button>
                   </div>
             </div>
 
@@ -302,24 +267,6 @@
     document.getElementById('pay-button')?.addEventListener('click', launchSnapPayment);
 
     document.addEventListener('DOMContentLoaded', function () {
-        const loyaltyConfirm = document.querySelector('[data-order-loyalty-confirm]');
-        const payOrderBtn = document.getElementById('payOrderBtn');
-        const declineBtn = loyaltyConfirm?.querySelector('[data-loyalty-decline]');
-        const choiceNote = loyaltyConfirm?.querySelector('[data-loyalty-choice-note]');
-
-        if (declineBtn && payOrderBtn) {
-            declineBtn.addEventListener('click', function () {
-                payOrderBtn.disabled = false;
-                declineBtn.disabled = true;
-                loyaltyConfirm?.querySelector('form')?.querySelector('button')?.setAttribute('disabled', 'disabled');
-
-                if (choiceNote) {
-                    choiceNote.hidden = false;
-                    choiceNote.textContent = 'Diskon poin tidak digunakan. Silakan lanjut ke pembayaran.';
-                }
-            });
-        }
-
         const paymentModalEl = document.getElementById('paymentMethodModal');
         if (paymentModalEl) {
             bootstrap.Modal.getOrCreateInstance(paymentModalEl).show();

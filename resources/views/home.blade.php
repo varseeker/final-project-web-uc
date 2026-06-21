@@ -106,6 +106,7 @@ data-member-lookup-url="{{ route('customers.lookup') }}"
             </div>
             <div class="modal-body pos-modal__body">
                 @include('partials.pos.cart-lines', ['baskets' => $baskets, 'mode' => 'checkout'])
+                <div class="pos-loyalty-confirm mt-3" data-loyalty-confirm hidden></div>
             </div>
             @if($hasCartItems)
             <div class="modal-footer pos-modal__footer border-0 flex-column align-items-stretch gap-3">
@@ -146,7 +147,6 @@ data-member-lookup-url="{{ route('customers.lookup') }}"
                             <button type="button" class="btn btn-outline-primary" data-member-lookup>Cari</button>
                         </div>
                         <div class="mt-2" data-member-result hidden></div>
-                        <div class="pos-loyalty-confirm mt-3" data-loyalty-confirm hidden></div>
                     </div>
 
                     <div class="pos-member-panel mb-3" data-member-panel="new" hidden>
