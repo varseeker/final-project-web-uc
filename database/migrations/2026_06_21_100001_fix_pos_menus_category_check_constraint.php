@@ -5,6 +5,10 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Perbaikan production: constraint enum lama (pos_menus_category_check) masih
+ * aktif setelah migrasi kategori sehingga Makanan/Minuman ditolak PostgreSQL.
+ */
 return new class extends Migration
 {
     public function up(): void
@@ -14,29 +18,18 @@ return new class extends Migration
         }
 
         $connection = Schema::getConnection();
-        $driver = $connection->getDriverName();
-        $table = $connection->getTablePrefix().'menus';
 
-        if ($driver === 'pgsql') {
-            $this->dropPostgresCategoryCheckConstraints($table);
-
-            DB::statement(sprintf(
-                'ALTER TABLE "%s" ALTER COLUMN category TYPE VARCHAR(20) USING category::text',
-                $table
-            ));
-        } elseif ($driver === 'mysql') {
-            DB::statement(sprintf(
-                'ALTER TABLE `%s` MODIFY category VARCHAR(20) NULL',
-                $table
-            ));
+        if ($connection->getDriverName() !== 'pgsql') {
+            return;
         }
 
-        DB::table('menus')->where('category', 'Snack')->update(['category' => 'Makanan']);
-        DB::table('menus')->whereIn('category', ['Coffee', 'Non-coffee'])->update(['category' => 'Minuman']);
-    }
+        $table = $connection->getTablePrefix().'menus';
 
-    private function dropPostgresCategoryCheckConstraints(string $table): void
-    {
+        DB::statement(sprintf(
+            'ALTER TABLE "%s" DROP CONSTRAINT IF EXISTS pos_menus_category_check',
+            $table
+        ));
+
         $constraints = DB::select(
             'SELECT con.conname AS name
              FROM pg_constraint con
@@ -61,9 +54,12 @@ return new class extends Migration
         }
 
         DB::statement(sprintf(
-            'ALTER TABLE "%s" DROP CONSTRAINT IF EXISTS pos_menus_category_check',
+            'ALTER TABLE "%s" ALTER COLUMN category TYPE VARCHAR(20) USING category::text',
             $table
         ));
+
+        DB::table('menus')->where('category', 'Snack')->update(['category' => 'Makanan']);
+        DB::table('menus')->whereIn('category', ['Coffee', 'Non-coffee'])->update(['category' => 'Minuman']);
     }
 
     public function down(): void
