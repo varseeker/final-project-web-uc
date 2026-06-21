@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\DB;
 class CustomerMembershipService
 {
     private const LOYALTY_RATE = 0.01;
+
+    private const LOYALTY_DISCOUNT_STEP_POINTS = 1000;
+
+    private const LOYALTY_DISCOUNT_STEP_PERCENT = 10;
+
+    private const MAX_LOYALTY_DISCOUNT_PERCENT = 50;
     public function findByPhone(?string $phone): ?Customer
     {
         $normalized = CustomerPhone::normalize($phone);
@@ -52,6 +58,34 @@ class CustomerMembershipService
         }
 
         return (int) floor($orderTotal * self::LOYALTY_RATE);
+    }
+
+    public function calculateDiscountPercent(int $loyaltyPoints): int
+    {
+        if ($loyaltyPoints < self::LOYALTY_DISCOUNT_STEP_POINTS) {
+            return 0;
+        }
+
+        $steps = intdiv($loyaltyPoints, self::LOYALTY_DISCOUNT_STEP_POINTS);
+        $percent = $steps * self::LOYALTY_DISCOUNT_STEP_PERCENT;
+
+        return min(self::MAX_LOYALTY_DISCOUNT_PERCENT, $percent);
+    }
+
+    /**
+     * @return array{percent: int, amount: int, total: int}
+     */
+    public function calculateDiscount(int $subtotal, int $loyaltyPoints): array
+    {
+        $percent = $this->calculateDiscountPercent($loyaltyPoints);
+        $amount = $percent > 0 ? (int) floor($subtotal * $percent / 100) : 0;
+        $total = max(0, $subtotal - $amount);
+
+        return [
+            'percent' => $percent,
+            'amount' => $amount,
+            'total' => $total,
+        ];
     }
 
     public function awardPointsForOrder(int|string $orderId): int

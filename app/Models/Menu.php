@@ -13,6 +13,7 @@ class Menu extends Model
         'category',
         'price',
         'most_ordered',
+        'is_bundle',
         'img_url',
         'options',
         'inventory_menu_id',
@@ -26,6 +27,7 @@ class Menu extends Model
     {
         return [
             'most_ordered' => 'boolean',
+            'is_bundle' => 'boolean',
             'is_active' => 'boolean',
             'options' => 'array',
         ];

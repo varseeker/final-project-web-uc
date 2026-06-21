@@ -108,9 +108,16 @@ class InventoryMenuSyncService
                     ->first();
             }
 
-            $category = $this->normalizeCategory(
-                (string) ($remote['category'] ?? $existing->category ?? $this->inferCategory((string) ($remote['name'] ?? '')))
-            );
+            $isBundle = (bool) ($remote['is_bundle'] ?? $existing->is_bundle ?? false);
+
+            if ($isBundle) {
+                $category = $existing->category ?? 'Makanan';
+            } else {
+                $category = $this->normalizeCategory(
+                    (string) ($remote['category'] ?? $existing->category ?? 'Makanan')
+                );
+            }
+
             $options = $existing->options ?? json_encode(MenuOptions::defaultsForCategory($category));
             $imgUrl = $this->resolveRemoteImage($remote);
             $payload = [
@@ -120,6 +127,7 @@ class InventoryMenuSyncService
                 'category' => $category,
                 'price' => (int) ($remote['price'] ?? $existing->price ?? config('inventory.default_price', 18000)),
                 'most_ordered' => (bool) ($remote['most_ordered'] ?? $existing->most_ordered ?? false),
+                'is_bundle' => (bool) ($remote['is_bundle'] ?? $existing->is_bundle ?? false),
                 'img_url' => $imgUrl,
                 'options' => $options,
                 'is_active' => (bool) ($remote['is_active'] ?? true),
@@ -194,23 +202,9 @@ class InventoryMenuSyncService
     private function normalizeCategory(string $category): string
     {
         return match ($category) {
-            'Non-Coffee' => 'Non-coffee',
-            default => $category,
+            'Snack', 'Makanan' => 'Makanan',
+            'Coffee', 'Non-coffee', 'Non-Coffee', 'Minuman' => 'Minuman',
+            default => $category !== '' ? $category : 'Makanan',
         };
-    }
-
-    private function inferCategory(string $name): string
-    {
-        $lower = strtolower($name);
-
-        if (preg_match('/\bindomie\b|\bnasi\b|\broti\b|\bsosis\b|\bpisang\b|\bmie goreng\b|\bsnack\b|\bfries\b/', $lower)) {
-            return 'Snack';
-        }
-
-        if (preg_match('/\bkopi\b|\bcoffee\b|\blatte\b|\bcappuccino\b|\bespresso\b|\btea\b|\bteh\b|\bnutrisari\b|\bminuman\b|\bjuice\b|\bes teh\b|\bes\b/', $lower)) {
-            return 'Non-coffee';
-        }
-
-        return 'Snack';
     }
 }

@@ -262,8 +262,14 @@
       <table class="receipt__totals">
         <tr>
           <td class="label">Subtotal</td>
-          <td class="value">Rp{{ number_format($total, 0, ',', '.') }}</td>
+          <td class="value">Rp{{ number_format($subtotal ?? $total, 0, ',', '.') }}</td>
         </tr>
+        @if(!empty($loyaltyDiscountAmount))
+        <tr>
+          <td class="label">Diskon member ({{ $loyaltyDiscountPercent ?? 0 }}%)</td>
+          <td class="value text-success">- Rp{{ number_format($loyaltyDiscountAmount, 0, ',', '.') }}</td>
+        </tr>
+        @endif
         <tr>
           <td class="label">Dibayar</td>
           <td class="value">Rp{{ number_format($pay, 0, ',', '.') }}</td>

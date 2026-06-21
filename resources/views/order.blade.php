@@ -17,6 +17,9 @@
                     <p class="small text-muted mb-0 mt-1">
                       Member · {{ \App\Support\CustomerPhone::display($memberCustomer->phone) }}
                       · {{ number_format($memberCustomer->loyalty_points, 0, ',', '.') }} poin
+                      @if(($loyaltyDiscountPercent ?? 0) > 0)
+                        · Diskon {{ $loyaltyDiscountPercent }}%
+                      @endif
                     </p>
                   @endif
 
@@ -25,9 +28,13 @@
 
             <div class="modal-body modal-xl px-4">
 
-                @php $total = 0; @endphp
-                  @foreach ($baskets as $index => $rock)
-                      @php $total += $rock->quantity * $rock->price; @endphp
+                @php
+                  $subtotal = (int) ($subtotal ?? 0);
+                  $loyaltyDiscountPercent = (int) ($loyaltyDiscountPercent ?? 0);
+                  $loyaltyDiscountAmount = (int) ($loyaltyDiscountAmount ?? 0);
+                  $total = (int) ($total ?? $subtotal);
+                @endphp
+                @foreach ($baskets as $index => $rock)
                       <div class="col" style="margin: 20px 0 0 0;">
                         <div class="card text-left shadow-sm" >
 
@@ -53,7 +60,17 @@
               <hr class="mt-5">
                 <div class="d-flex justify-content-between align-items-center fw-bold ">
                   <h4>Subtotal</h4>
-                  <h4 id="subtotal">Rp{{ number_format($total, 0, ',', '.') }}</h4>
+                  <h4 id="subtotal">Rp{{ number_format($subtotal, 0, ',', '.') }}</h4>
+                </div>
+                @if($loyaltyDiscountAmount > 0)
+                <div class="d-flex justify-content-between align-items-center text-success">
+                  <h5>Diskon member ({{ $loyaltyDiscountPercent }}%)</h5>
+                  <h5>- Rp{{ number_format($loyaltyDiscountAmount, 0, ',', '.') }}</h5>
+                </div>
+                @endif
+                <div class="d-flex justify-content-between align-items-center fw-bold mt-2">
+                  <h4>Total bayar</h4>
+                  <h4 id="grandTotal">Rp{{ number_format($total, 0, ',', '.') }}</h4>
                 </div>
 
                 <div class="row g-3 align-items-center ms-auto me-auto">

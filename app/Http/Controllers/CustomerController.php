@@ -90,6 +90,7 @@ class CustomerController extends Controller
             'name' => $customer->name,
             'phone' => CustomerPhone::display($customer->phone),
             'loyalty_points' => (int) $customer->loyalty_points,
+            'loyalty_discount_percent' => $this->membershipService->calculateDiscountPercent((int) $customer->loyalty_points),
         ];
     }
 }

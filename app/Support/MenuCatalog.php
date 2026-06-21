@@ -48,48 +48,14 @@ class MenuCatalog
 
     public static function isBundle(object $menu): bool
     {
-        $name = strtolower((string) ($menu->name ?? ''));
-        $description = strtolower((string) ($menu->description ?? ''));
-
-        $patterns = [
-            '/\b(paket|bundle|combo|hemat|platter)\b/',
-            '/indomie\s+(kapal|kopi)/',
-            '/kapal\s*api.*indomie|indomie.*kapal\s*api/',
-            '/nasi goreng warkop/',
-            '/mie\s*\+\s*(kopi|teh|minuman)/',
-        ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $name) || preg_match($pattern, $description)) {
-                return true;
-            }
-        }
-
-        $hasFood = (bool) preg_match('/indomie|nasi|roti|mie goreng|sosis|pisang goreng/', $name);
-        $hasDrink = (bool) preg_match('/kapal api|kopi|teh|nutrisari|es teh|minuman/', $name);
-
-        return $hasFood && $hasDrink;
+        return (bool) ($menu->is_bundle ?? false);
     }
 
     public static function segment(object $menu): string
     {
-        $category = self::normalizeCategory($menu->category ?? null);
-
-        if ($category === 'Snack') {
-            return self::SEGMENT_FOOD;
-        }
-
-        if (in_array($category, ['Coffee', 'Non-coffee'], true)) {
-            return self::SEGMENT_DRINK;
-        }
-
-        $name = strtolower((string) ($menu->name ?? ''));
-
-        if (preg_match('/kopi|coffee|latte|cappuccino|espresso|teh|tea|nutrisari|minuman|jeruk|susu|es\s/', $name)) {
-            return self::SEGMENT_DRINK;
-        }
-
-        return self::SEGMENT_FOOD;
+        return self::normalizeCategory($menu->category ?? null) === 'Minuman'
+            ? self::SEGMENT_DRINK
+            : self::SEGMENT_FOOD;
     }
 
     public static function segmentLabel(string $segment): string
@@ -124,8 +90,9 @@ class MenuCatalog
     private static function normalizeCategory(?string $category): string
     {
         return match ($category) {
-            'Non-Coffee' => 'Non-coffee',
-            default => $category ?? 'Snack',
+            'Minuman', 'Non-coffee', 'Non-Coffee', 'Coffee' => 'Minuman',
+            'Makanan', 'Snack' => 'Makanan',
+            default => $category ?? 'Makanan',
         };
     }
 }

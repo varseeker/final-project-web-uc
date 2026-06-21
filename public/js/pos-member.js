@@ -76,12 +76,20 @@
         }
 
         resultEl.hidden = false;
+        var discountText = '';
+        if (Number(customer.loyalty_discount_percent || 0) > 0) {
+            discountText =
+                ' <span class="badge rounded-pill text-bg-success ms-1">' +
+                'Diskon ' + customer.loyalty_discount_percent + '%</span>';
+        }
+
         resultEl.innerHTML =
             '<div class="pos-member-result">' +
             '<strong>' + customer.name + '</strong>' +
             '<span class="text-muted"> · ' + customer.phone + '</span>' +
             '<span class="badge rounded-pill text-bg-primary ms-1">' +
             Number(customer.loyalty_points || 0).toLocaleString('id-ID') + ' poin</span>' +
+            discountText +
             '</div>';
     }
 

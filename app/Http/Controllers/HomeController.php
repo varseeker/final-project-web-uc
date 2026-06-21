@@ -37,10 +37,11 @@ class HomeController extends Controller
         }
 
         $total = (int) $this->getOrderItems($orderId)->sum('subtotal');
+        $totalDue = (int) ($order->total ?? $total);
         $pay = (int) preg_replace('/\D/', '', (string) $request->input('cashAmount', 0));
-        $change = max(0, $pay - $total);
+        $change = max(0, $pay - $totalDue);
 
-        if ($pay < $total) {
+        if ($pay < $totalDue) {
             return redirect('home')->with('lastAct', 'Nominal tunai kurang dari total tagihan.');
         }
 
@@ -148,6 +149,35 @@ class HomeController extends Controller
             return redirect('home')->with('lastAct', 'Total pesanan tidak valid.');
         }
 
+        $subtotal = $total;
+        $loyaltyDiscountPercent = 0;
+        $loyaltyDiscountAmount = 0;
+        $memberCustomer = null;
+
+        if ($customerId) {
+            $memberCustomer = Customer::query()->find($customerId);
+
+            if ($memberCustomer) {
+                $discount = $this->customerMembership->calculateDiscount(
+                    $subtotal,
+                    (int) $memberCustomer->loyalty_points
+                );
+                $loyaltyDiscountPercent = $discount['percent'];
+                $loyaltyDiscountAmount = $discount['amount'];
+                $total = $discount['total'];
+            }
+        }
+
+        $orderPayload = [
+            'subtotal' => $subtotal,
+            'total' => $total,
+            'loyalty_discount_percent' => $loyaltyDiscountPercent,
+            'loyalty_discount_amount' => $loyaltyDiscountAmount,
+            'customer' => $csName,
+            'customer_id' => $customerId,
+            'loyalty_points_earned' => null,
+            'updated_at' => now(),
+        ];
         $pendingOrder = DB::table('order')
             ->where('user_id', Auth::id())
             ->where('payment-status', 'pending')
@@ -157,26 +187,16 @@ class HomeController extends Controller
         if ($pendingOrder) {
             $orderId = (int) $pendingOrder->id;
 
-            DB::table('order')->where('id', $orderId)->update([
-                'total' => $total,
-                'customer' => $csName,
-                'customer_id' => $customerId,
-                'loyalty_points_earned' => null,
-                'updated_at' => now(),
-            ]);
+            DB::table('order')->where('id', $orderId)->update($orderPayload);
 
             DB::table('ordered_items')->where('order_id', $orderId)->delete();
         } else {
-            $orderId = (int) DB::table('order')->insertGetId([
-                'total' => $total,
-                'customer' => $csName,
-                'customer_id' => $customerId,
+            $orderId = (int) DB::table('order')->insertGetId(array_merge($orderPayload, [
                 'status' => 'waiting-payment',
                 'payment-status' => 'pending',
                 'user_id' => Auth::id(),
                 'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            ]));
         }
 
         foreach ($baskets as $basket) {
@@ -220,8 +240,11 @@ class HomeController extends Controller
             'snapToken' => $snapToken,
             'successUrl' => route('payment-success'),
             'orderTarget' => $orderId,
+            'subtotal' => $subtotal,
+            'loyaltyDiscountPercent' => $loyaltyDiscountPercent,
+            'loyaltyDiscountAmount' => $loyaltyDiscountAmount,
             'total' => $total,
-            'memberCustomer' => $customerId ? Customer::query()->find($customerId) : null,
+            'memberCustomer' => $memberCustomer,
         ]);
     }
 
@@ -369,8 +392,11 @@ class HomeController extends Controller
         ?object $order = null,
     ) {
         $baskets = $this->getOrderItems($orderId);
-        $total = (int) $baskets->sum('subtotal');
         $order = $order ?? DB::table('order')->where('id', $orderId)->first();
+        $subtotal = (int) ($order->subtotal ?? $baskets->sum('subtotal'));
+        $loyaltyDiscountPercent = (int) ($order->loyalty_discount_percent ?? 0);
+        $loyaltyDiscountAmount = (int) ($order->loyalty_discount_amount ?? 0);
+        $total = (int) ($order->total ?? max(0, $subtotal - $loyaltyDiscountAmount));
         $loyaltyEarned = (int) ($order->loyalty_points_earned ?? 0);
         $memberPhone = null;
         $memberTotalPoints = null;
@@ -388,6 +414,9 @@ class HomeController extends Controller
             'csName' => $csName ?? 'Pelanggan',
             'pay' => $pay,
             'change' => $change,
+            'subtotal' => $subtotal,
+            'loyaltyDiscountPercent' => $loyaltyDiscountPercent,
+            'loyaltyDiscountAmount' => $loyaltyDiscountAmount,
             'total' => $total,
             'orderId' => $orderId,
             'paymentMethod' => $paymentMethod,

@@ -11,13 +11,13 @@ class MenuOptions
         $category = self::normalizeCategory($category);
 
         return match ($category) {
-            'Snack' => [
+            'Snack', 'Makanan' => [
                 'variant' => self::field('select', 'Variant', ['Spicy', 'Mild', 'Not Spicy'], true),
                 'size' => self::field('radio', 'Size', ['Reguler', 'Large'], true, 'Reguler'),
                 'ice' => self::disabledField(),
                 'sugar' => self::disabledField(),
             ],
-            'Non-coffee', 'Non-Coffee' => [
+            'Minuman', 'Non-coffee', 'Non-Coffee', 'Coffee' => [
                 'variant' => self::field('select', 'Variant', ['Hot', 'Cold'], true),
                 'size' => self::field('radio', 'Size', ['Small', 'Reguler', 'Large'], true, 'Reguler'),
                 'ice' => self::field('radio', 'Ice', ['No Ice', 'Less Ice', 'Normal Ice'], true, 'Normal Ice', [
@@ -177,6 +177,8 @@ class MenuOptions
     public static function categoryPresetsJson(): string
     {
         return json_encode([
+            'Makanan' => self::defaultsForCategory('Makanan'),
+            'Minuman' => self::defaultsForCategory('Minuman'),
             'Coffee' => self::defaultsForCategory('Coffee'),
             'Non-coffee' => self::defaultsForCategory('Non-coffee'),
             'Non-Coffee' => self::defaultsForCategory('Non-Coffee'),
@@ -257,8 +259,9 @@ class MenuOptions
     private static function normalizeCategory(?string $category): string
     {
         return match ($category) {
-            'Non-Coffee' => 'Non-coffee',
-            default => $category ?? 'Coffee',
+            'Non-Coffee', 'Non-coffee', 'Coffee', 'Minuman' => 'Minuman',
+            'Snack', 'Makanan' => 'Makanan',
+            default => $category ?? 'Makanan',
         };
     }
 }
