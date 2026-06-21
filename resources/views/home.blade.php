@@ -106,7 +106,7 @@ data-member-lookup-url="{{ route('customers.lookup') }}"
             </div>
             @if($hasCartItems)
             <div class="modal-body pos-modal__body pos-checkout-layout">
-                <form action="{{ url('/home/order') }}" method="POST" class="pos-checkout-form h-100" data-loading-message="Menyiapkan pembayaran...">
+                <form action="{{ url('/home/order') }}" method="POST" class="pos-checkout-form" data-loading-message="Menyiapkan pembayaran...">
                     @csrf
                     <input type="hidden" name="customerId" id="customerId" value="">
                     <input type="hidden" name="useLoyaltyDiscount" id="useLoyaltyDiscount" value="">
@@ -125,58 +125,62 @@ data-member-lookup-url="{{ route('customers.lookup') }}"
                         </section>
 
                         <aside class="pos-checkout-layout__member" aria-label="Member dan pelanggan">
-                            <div class="pos-checkout-layout__heading">
-                                <h6 class="pos-checkout-layout__title mb-0">Pilih Member</h6>
-                            </div>
-
-                            <label for="customerName" class="form-label fw-semibold mb-1">Nama pelanggan</label>
-                            <div class="input-group mb-3">
-                                <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                <input type="text" name="customerName" id="customerName" class="form-control" placeholder="Contoh: Budi" required autocomplete="name">
-                            </div>
-
-                            <fieldset class="pos-member-fieldset mb-3">
-                                <legend class="form-label fw-semibold mb-2">Member</legend>
-                                <div class="d-flex flex-column gap-2">
-                                    <label class="pos-member-option">
-                                        <input type="radio" name="memberMode" value="none" checked>
-                                        <span>Bukan member</span>
-                                    </label>
-                                    <label class="pos-member-option">
-                                        <input type="radio" name="memberMode" value="existing">
-                                        <span>Sudah punya member</span>
-                                    </label>
-                                    <label class="pos-member-option">
-                                        <input type="radio" name="memberMode" value="new">
-                                        <span>Daftar member baru</span>
-                                    </label>
+                            <div class="pos-checkout-layout__member-scroll">
+                                <div class="pos-checkout-layout__heading">
+                                    <h6 class="pos-checkout-layout__title mb-0">Pilih Member</h6>
                                 </div>
-                            </fieldset>
 
-                            <div class="pos-member-panel mb-3" data-member-panel="existing" hidden>
-                                <label for="memberPhoneExisting" class="form-label fw-semibold mb-1">Nomor telepon member</label>
-                                <div class="input-group input-group-sm mb-2">
-                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                                    <input type="tel" name="memberPhone" id="memberPhoneExisting" class="form-control" placeholder="08xxxxxxxxxx" maxlength="20" autocomplete="tel">
-                                    <button type="button" class="btn btn-outline-primary" data-member-lookup>Cari</button>
+                                <label for="customerName" class="form-label fw-semibold mb-1">Nama pelanggan</label>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input type="text" name="customerName" id="customerName" class="form-control" placeholder="Contoh: Budi" required autocomplete="name">
                                 </div>
-                                <div data-member-result hidden></div>
+
+                                <fieldset class="pos-member-fieldset mb-3">
+                                    <legend class="form-label fw-semibold mb-2">Member</legend>
+                                    <div class="d-flex flex-column gap-2">
+                                        <label class="pos-member-option">
+                                            <input type="radio" name="memberMode" value="none" checked>
+                                            <span>Bukan member</span>
+                                        </label>
+                                        <label class="pos-member-option">
+                                            <input type="radio" name="memberMode" value="existing">
+                                            <span>Sudah punya member</span>
+                                        </label>
+                                        <label class="pos-member-option">
+                                            <input type="radio" name="memberMode" value="new">
+                                            <span>Daftar member baru</span>
+                                        </label>
+                                    </div>
+                                </fieldset>
+
+                                <div class="pos-member-panel mb-3" data-member-panel="existing" hidden>
+                                    <label for="memberPhoneExisting" class="form-label fw-semibold mb-1">Nomor telepon member</label>
+                                    <div class="input-group input-group-sm mb-2">
+                                        <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                        <input type="tel" name="memberPhone" id="memberPhoneExisting" class="form-control" placeholder="08xxxxxxxxxx" maxlength="20" autocomplete="tel">
+                                        <button type="button" class="btn btn-outline-primary" data-member-lookup>Cari</button>
+                                    </div>
+                                    <div data-member-result hidden></div>
+                                </div>
+
+                                <div class="pos-member-panel mb-3" data-member-panel="new" hidden>
+                                    <label for="memberPhoneNew" class="form-label fw-semibold mb-1">Nomor telepon member baru</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                        <input type="tel" name="memberPhone" id="memberPhoneNew" class="form-control" placeholder="08xxxxxxxxxx" maxlength="20" autocomplete="tel" disabled>
+                                    </div>
+                                    <p class="small text-muted mb-0 mt-2">Nama di atas akan dipakai sebagai data member.</p>
+                                </div>
+
+                                <div class="pos-loyalty-confirm" data-loyalty-confirm hidden></div>
                             </div>
 
-                            <div class="pos-member-panel mb-3" data-member-panel="new" hidden>
-                                <label for="memberPhoneNew" class="form-label fw-semibold mb-1">Nomor telepon member baru</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                                    <input type="tel" name="memberPhone" id="memberPhoneNew" class="form-control" placeholder="08xxxxxxxxxx" maxlength="20" autocomplete="tel" disabled>
-                                </div>
-                                <p class="small text-muted mb-0 mt-2">Nama di atas akan dipakai sebagai data member.</p>
+                            <div class="pos-checkout-layout__member-actions">
+                                <button type="submit" class="btn btn-success btn-lg w-100" id="checkoutSubmitBtn" data-checkout-submit disabled>
+                                    Lanjut ke pembayaran <i class="bi bi-arrow-right-short"></i>
+                                </button>
                             </div>
-
-                            <div class="pos-loyalty-confirm" data-loyalty-confirm hidden></div>
-
-                            <button type="submit" class="btn btn-success btn-lg w-100 mt-auto">
-                                Lanjut ke pembayaran <i class="bi bi-arrow-right-short"></i>
-                            </button>
                         </aside>
                     </div>
                 </form>

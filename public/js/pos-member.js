@@ -93,6 +93,66 @@
         updateCheckoutSummary(false, 0);
     }
 
+    function getSubmitButton(form) {
+        return qs('[data-checkout-submit]', form) || qs('#checkoutSubmitBtn', form);
+    }
+
+    function getSelectedMemberMode(form) {
+        var modeInput = qsa('input[name="memberMode"]', form).find(function (input) {
+            return input.checked;
+        });
+
+        return modeInput ? modeInput.value : 'none';
+    }
+
+    function canProceedCheckout(form) {
+        var customerName = qs('#customerName', form);
+        if (!customerName || !customerName.value.trim()) {
+            return false;
+        }
+
+        var mode = getSelectedMemberMode(form);
+
+        if (mode === 'none') {
+            return true;
+        }
+
+        if (mode === 'new') {
+            var newPhoneInput = qs('#memberPhoneNew', form);
+            return !!(newPhoneInput && newPhoneInput.value.trim());
+        }
+
+        if (mode === 'existing') {
+            var customerId = qs('#customerId', form);
+            if (!customerId || !customerId.value) {
+                return false;
+            }
+
+            if (
+                activeMember &&
+                Number(activeMember.loyalty_discount_percent || 0) > 0 &&
+                loyaltyChoice === null
+            ) {
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    function updateSubmitButtonState(form) {
+        var submitBtn = getSubmitButton(form);
+        if (!submitBtn) {
+            return;
+        }
+
+        var allowed = canProceedCheckout(form);
+        submitBtn.disabled = !allowed;
+        submitBtn.setAttribute('aria-disabled', allowed ? 'false' : 'true');
+    }
+
     function setMemberPanel(mode) {
         var existingPanel = qs('[data-member-panel="existing"]');
         var newPanel = qs('[data-member-panel="new"]');
@@ -141,6 +201,7 @@
         }
 
         resetCheckoutSummary();
+        updateSubmitButtonState(form);
     }
 
     function setLoyaltyChoice(form, usePoints) {
@@ -176,6 +237,8 @@
             noBtn.classList.toggle('active', !usePoints);
             noBtn.disabled = !usePoints;
         }
+
+        updateSubmitButtonState(form);
     }
 
     function renderLoyaltyConfirm(form, customer) {
@@ -194,6 +257,7 @@
             useInput.value = '0';
             loyaltyChoice = 'no';
             resetCheckoutSummary();
+            updateSubmitButtonState(form);
             return;
         }
 
@@ -224,6 +288,7 @@
             setLoyaltyChoice(form, false);
         });
 
+        updateSubmitButtonState(form);
         confirmEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -264,6 +329,7 @@
             '</div>';
 
         renderLoyaltyConfirm(form, customer);
+        updateSubmitButtonState(form);
     }
 
     function lookupMember(phone, onSuccess, onError) {
@@ -320,6 +386,7 @@
         var lookupBtn = qs('[data-member-lookup]', form);
         var resultEl = qs('[data-member-result]', form);
         var orderModal = getOrderModal();
+        var submitBtn = getSubmitButton(form);
 
         function activePhoneInput(mode) {
             if (mode === 'new') {
@@ -337,6 +404,8 @@
                 if (resultEl) {
                     resultEl.classList.remove('is-invalid');
                 }
+
+                updateSubmitButtonState(form);
             });
         });
 
@@ -353,6 +422,34 @@
                         return input.checked;
                     }) || {}).value || 'none'
                 );
+                updateSubmitButtonState(form);
+            });
+        }
+
+        var customerNameInput = qs('#customerName', form);
+        if (customerNameInput) {
+            customerNameInput.addEventListener('input', function () {
+                customerNameInput.classList.remove('is-invalid');
+                updateSubmitButtonState(form);
+            });
+        }
+
+        var newPhoneInput = qs('#memberPhoneNew', form);
+        if (newPhoneInput) {
+            newPhoneInput.addEventListener('input', function () {
+                newPhoneInput.classList.remove('is-invalid');
+                updateSubmitButtonState(form);
+            });
+        }
+
+        var existingPhoneInput = qs('#memberPhoneExisting', form);
+        if (existingPhoneInput) {
+            existingPhoneInput.addEventListener('input', function () {
+                renderMemberResult(null, form);
+                if (resultEl) {
+                    resultEl.classList.remove('is-invalid');
+                }
+                updateSubmitButtonState(form);
             });
         }
 
@@ -366,6 +463,7 @@
                         if (resultEl) {
                             resultEl.classList.remove('is-invalid');
                         }
+                        updateSubmitButtonState(form);
                     },
                     function (message) {
                         renderMemberResult(null, form);
@@ -375,6 +473,7 @@
                             resultEl.classList.add('is-invalid');
                             resultEl.innerHTML = '<span class="text-danger small">' + message + '</span>';
                         }
+                        updateSubmitButtonState(form);
                     }
                 );
             });
@@ -390,7 +489,22 @@
             }
         }
 
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function (event) {
+                if (!canProceedCheckout(form)) {
+                    event.preventDefault();
+                }
+            });
+        }
+
+        updateSubmitButtonState(form);
+
         form.addEventListener('submit', function (event) {
+            if (!canProceedCheckout(form)) {
+                event.preventDefault();
+                return;
+            }
+
             var modeInput = modeInputs.find(function (input) {
                 return input.checked;
             });
