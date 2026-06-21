@@ -1,8 +1,11 @@
 @php
     $total = 0;
     $showActions = ($mode ?? 'cart') === 'cart';
+    $part = $part ?? 'full';
+    $isCheckout = ($mode ?? 'cart') === 'checkout';
 @endphp
 
+@if($part === 'full' || $part === 'list')
 <div class="pos-cart-list">
     @forelse ($baskets as $rock)
         @php $lineTotal = $rock->subtotal ?? ($rock->quantity * $rock->price); $total += $lineTotal; @endphp
@@ -54,9 +57,17 @@
         </div>
     @endforelse
 </div>
+@endif
 
-@if(count($baskets) > 0)
-    @if(($mode ?? 'cart') === 'checkout')
+@if(($part === 'full' || $part === 'summary') && count($baskets) > 0)
+    @php
+        if ($part === 'summary') {
+            foreach ($baskets as $rock) {
+                $total += $rock->subtotal ?? ($rock->quantity * $rock->price);
+            }
+        }
+    @endphp
+    @if($isCheckout)
         <div class="pos-cart-summary pos-cart-summary--checkout" data-checkout-summary data-checkout-subtotal="{{ $total }}">
             <div class="pos-cart-summary__row">
                 <span>Subtotal</span>
